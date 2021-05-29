@@ -1,0 +1,30 @@
+plugins {
+    id 'java'
+}
+
+group 'com.exaroton.bungee'
+version '1.0.0'
+
+repositories {
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+    mavenCentral()
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+dependencies {
+    implementation group: 'net.md-5', name: 'bungeecord-api', version: '1.16-R0.5-SNAPSHOT'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    implementation(name: 'java-exaroton-api-1.1.0') {
+        exclude group: 'org.slf4j', module: 'slf4j-jdk14'
+    }
+    implementation 'org.slf4j:slf4j-log4j12:1.7.9'
+}
+
+jar {
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
