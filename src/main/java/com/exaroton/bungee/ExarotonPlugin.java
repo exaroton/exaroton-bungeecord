@@ -170,7 +170,13 @@ public class ExarotonPlugin extends Plugin {
         return server.getAddress().startsWith(query) || server.getName().startsWith(query) || server.getId().startsWith(query);
     }
 
-    public Iterable<String> matchingServers(String query) {
+    /**
+     * find auto completions by a query and status
+     * @param query partial server name, address or ID
+     * @param status server status
+     * @return all matching server names, addresses and IDs
+     */
+    public Iterable<String> serverCompletions(String query, int status) {
         if (serverCache == null) {
             try {
                 this.fetchServers();
@@ -179,7 +185,7 @@ public class ExarotonPlugin extends Plugin {
                 return new ArrayList<>();
             }
         }
-        Server[] matching = Arrays.stream(serverCache).filter(server -> matchBeginning(server, query)).toArray(Server[]::new);
+        Server[] matching = Arrays.stream(serverCache).filter(server -> matchBeginning(server, query) && server.hasStatus(status)).toArray(Server[]::new);
         ArrayList<String> result = new ArrayList<>();
 
         for (Server server: matching) {

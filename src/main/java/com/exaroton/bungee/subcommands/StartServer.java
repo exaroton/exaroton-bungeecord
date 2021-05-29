@@ -10,7 +10,6 @@ import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
 
-import java.util.*;
 import java.util.logging.Level;
 
 public class StartServer extends SubCommand {
@@ -52,6 +51,6 @@ public class StartServer extends SubCommand {
 
     @Override
     public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
-        return plugin.matchingServers(args[0]);
+        return plugin.serverCompletions(args[0], ServerStatus.OFFLINE);
     }
 }
