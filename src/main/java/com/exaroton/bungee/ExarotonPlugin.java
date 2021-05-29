@@ -15,8 +15,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -106,14 +106,6 @@ public class ExarotonPlugin extends Plugin {
     }
 
     /**
-     * get exaroton client
-     * @return exaroton client
-     */
-    public ExarotonClient getExarotonClient() {
-        return exarotonClient;
-    }
-
-    /**
      * get config
      * @return configuration
      */
@@ -122,21 +114,13 @@ public class ExarotonPlugin extends Plugin {
     }
 
     /**
-     * get server cache
-     * @return cached servers
-     */
-    public Server[] getServerCache() {
-        return serverCache;
-    }
-
-    /**
      * update server cache to provided servers
-     * @param servers new servers
+     * @throws APIException API exceptions
+     * @return exaroton servers
      */
-    public void updateServerCache(Server[] servers) {
-        if (servers != null) {
-            this.serverCache = servers;
-        }
+    public Server[] fetchServers() throws APIException {
+        this.getProxy().getScheduler().schedule(this, () -> this.serverCache = null, 1, TimeUnit.MINUTES);
+        return this.serverCache = exarotonClient.getServers();
     }
 
     /**
@@ -147,9 +131,7 @@ public class ExarotonPlugin extends Plugin {
      * @throws APIException exceptions from the API
      */
     public Server findServer(String query) throws APIException {
-        Server[] servers;
-        servers = exarotonClient.getServers();
-        this.updateServerCache(servers);
+        Server[] servers = fetchServers();
 
         servers = Arrays.stream(servers)
                 .filter(server -> matchExact(server, query))
@@ -191,7 +173,7 @@ public class ExarotonPlugin extends Plugin {
     public Iterable<String> matchingServers(String query) {
         if (serverCache == null) {
             try {
-                this.serverCache = exarotonClient.getServers();
+                this.fetchServers();
             } catch (APIException e) {
                 logger.log(Level.SEVERE, "Failed to load completions", e);
                 return new ArrayList<>();
