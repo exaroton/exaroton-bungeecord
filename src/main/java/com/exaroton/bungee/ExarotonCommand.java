@@ -1,6 +1,7 @@
 package com.exaroton.bungee;
 
 import com.exaroton.bungee.subcommands.StartServer;
+import com.exaroton.bungee.subcommands.StopServer;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -44,6 +45,7 @@ public class ExarotonCommand extends Command implements TabExecutor {
      */
     private void loadCommands() {
         this.registerCommand(new StartServer(plugin));
+        this.registerCommand(new StopServer(plugin));
     }
 
     /**
