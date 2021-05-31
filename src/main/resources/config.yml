@@ -1,1 +1,6 @@
+# exaroton API token - You can generate this on https://exaroton.com/account/
 apiToken: 'example-token'
+
+# Watch servers in the bungee config and automatically remove them when they go offline
+# NOTE: This only works if you use .exaroton.me addresses in your bungee config.
+watch-servers: true

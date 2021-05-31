@@ -69,9 +69,7 @@ public class ExarotonCommand extends Command implements TabExecutor {
             return;
         }
 
-        taskScheduler.runAsync(plugin, () -> {
-           command.execute(sender, Arrays.copyOfRange(args, 1, args.length));
-        });
+        taskScheduler.runAsync(plugin, () -> command.execute(sender, Arrays.copyOfRange(args, 1, args.length)));
     }
 
     /**

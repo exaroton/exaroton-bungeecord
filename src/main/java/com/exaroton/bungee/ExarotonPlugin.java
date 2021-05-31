@@ -3,6 +3,7 @@ package com.exaroton.bungee;
 import com.exaroton.api.APIException;
 import com.exaroton.api.ExarotonClient;
 import com.exaroton.api.server.Server;
+import com.exaroton.api.server.ServerStatus;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
 import net.md_5.bungee.config.Configuration;
@@ -13,9 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -53,6 +52,7 @@ public class ExarotonPlugin extends Plugin {
         }
         if (this.createExarotonClient()) {
             this.registerCommands();
+            this.startWatchingServers();
         }
     }
 
@@ -78,7 +78,16 @@ public class ExarotonPlugin extends Plugin {
      * @throws IOException exception loading config
      */
     private void loadConfig() throws IOException {
-        this.config = ConfigurationProvider.getProvider(YamlConfiguration.class).load(this.getConfigFile());
+        File configFile = this.getConfigFile();
+        ConfigurationProvider provider = ConfigurationProvider.getProvider(YamlConfiguration.class);
+        this.config = provider.load(configFile);
+        Configuration defaultConfig = provider.load(getResourceAsStream("config.yml"));
+        for (String key: defaultConfig.getKeys()) {
+            if (!config.getKeys().contains(key)) {
+                config.set(key, defaultConfig.get(key));
+            }
+            provider.save(config, configFile);
+        }
     }
 
     /**
@@ -103,14 +112,6 @@ public class ExarotonPlugin extends Plugin {
     private void registerCommands() {
         PluginManager pluginManager = this.getProxy().getPluginManager();
         pluginManager.registerCommand(this, new ExarotonCommand(this));
-    }
-
-    /**
-     * get config
-     * @return configuration
-     */
-    public Configuration getConfig() {
-        return config;
     }
 
     /**
@@ -199,5 +200,47 @@ public class ExarotonPlugin extends Plugin {
         }
 
         return result;
+    }
+
+    /**
+     * start watching servers in the bungee config
+     */
+    public void startWatchingServers() {
+        if (config.getBoolean("watch-servers")) {
+            this.getProxy().getScheduler().runAsync(this, () -> {
+                this.watchServers();
+            });
+        }
+    }
+
+    /**
+     * watch servers in the bungee config
+     */
+    public void watchServers(){
+        try {
+            Configuration bungeeConfig = ConfigurationProvider.getProvider(YamlConfiguration.class)
+                    .load(new File(getProxy().getPluginsFolder().getParent(), "config.yml"));
+            Configuration servers = bungeeConfig.getSection("servers");
+            for (String serverName: servers.getKeys()) {
+                String address = servers.getString(serverName+".address");
+                address = address.replaceAll(":\\d+$", "");
+                if (address.endsWith(".exaroton.me")) {
+                    logger.info("Found exaroton server: " + address + ", start watching status changes");
+                    try {
+                        Server server = this.findServer(address);
+                        if (!server.hasStatus(ServerStatus.ONLINE)) {
+                            this.getProxy().getServers().remove(serverName);
+                            logger.info("Server " + address + " is offline, removed it from the server list!");
+                        }
+                        server.subscribe();
+                        server.addStatusSubscriber(new ServerStatusListener(this.getProxy(), serverName));
+                    } catch (APIException e) {
+                        logger.log(Level.SEVERE, "Failed to access API, not watching "+address);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Failed to load bungee config, cant watch servers!", e);
+        }
     }
 }

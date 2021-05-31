@@ -43,7 +43,7 @@ public abstract class SubCommand implements TabExecutor {
      */
     public String getName() {
         return name;
-    };
+    }
 
     /**
      * execute command

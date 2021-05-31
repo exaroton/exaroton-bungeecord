@@ -22,8 +22,14 @@ public class ServerStatusListener extends ServerStatusSubscriber {
      */
     private CommandSender sender;
 
-    public ServerStatusListener(ProxyServer proxy) {
+    /**
+     * optional server name
+     */
+    private String name;
+
+    public ServerStatusListener(ProxyServer proxy, String name) {
         this.proxy = proxy;
+        this.name = name;
     }
 
     public ServerStatusListener(ProxyServer proxy, CommandSender sender) {
@@ -34,14 +40,14 @@ public class ServerStatusListener extends ServerStatusSubscriber {
     @Override
     public void statusUpdate(Server oldServer, Server newServer) {
         if (!oldServer.hasStatus(ServerStatus.ONLINE) && newServer.hasStatus(ServerStatus.ONLINE)) {
-            proxy.getServers().put(newServer.getName(),
+            proxy.getServers().put( this.name == null ? newServer.getName() : this.name,
                     proxy.constructServerInfo(newServer.getName(),
                             new InetSocketAddress(newServer.getAddress(), newServer.getPort()), newServer.getMotd(), false)
             );
             this.sendInfo(ChatColor.GREEN + "[exaroton] " + newServer.getAddress() + " went online!");
         }
         else if (oldServer.hasStatus(ServerStatus.ONLINE) && !newServer.hasStatus(ServerStatus.ONLINE)) {
-            proxy.getServers().remove(newServer.getName());
+            proxy.getServers().remove(this.name == null ? newServer.getName() : this.name);
             this.sendInfo(ChatColor.RED + "[exaroton] " + newServer.getAddress() + " is no longer online!");
         }
     }
