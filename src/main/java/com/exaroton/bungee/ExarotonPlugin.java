@@ -4,6 +4,7 @@ import com.exaroton.api.APIException;
 import com.exaroton.api.ExarotonClient;
 import com.exaroton.api.server.Server;
 import com.exaroton.api.server.ServerStatus;
+import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
 import net.md_5.bungee.config.Configuration;
@@ -40,6 +41,12 @@ public class ExarotonPlugin extends Plugin {
      * server cache
      */
     private Server[] serverCache;
+
+    /**
+     * server status listeners
+     * serverid -> status listener
+     */
+    private final HashMap<String, ServerStatusListener> statusListeners = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -203,6 +210,28 @@ public class ExarotonPlugin extends Plugin {
     }
 
     /**
+     * listen to server status
+     * if there already is a status listener then add the sender and/or name
+     * @param server server to subscribe to
+     * @param sender command sender to update
+     * @param name server name in bungee server list
+     */
+    public void listenToStatus(Server server, CommandSender sender, String name) {
+        if (statusListeners.containsKey(server.getId())) {
+            statusListeners.get(server.getId())
+                    .setSender(sender)
+                    .setName(name);
+            return;
+        }
+        server.subscribe();
+        ServerStatusListener listener = new ServerStatusListener(this.getProxy())
+                .setSender(sender)
+                .setName(name);
+        server.addStatusSubscriber(listener);
+        statusListeners.put(server.getId(), listener);
+    }
+
+    /**
      * start watching servers in the bungee config
      */
     public void startWatchingServers() {
@@ -232,8 +261,7 @@ public class ExarotonPlugin extends Plugin {
                             this.getProxy().getServers().remove(serverName);
                             logger.info("Server " + address + " is offline, removed it from the server list!");
                         }
-                        server.subscribe();
-                        server.addStatusSubscriber(new ServerStatusListener(this.getProxy(), serverName));
+                        this.listenToStatus(server, null, serverName);
                     } catch (APIException e) {
                         logger.log(Level.SEVERE, "Failed to access API, not watching "+address);
                     }

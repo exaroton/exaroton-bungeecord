@@ -39,8 +39,7 @@ public class StartServer extends SubCommand {
                 return;
             }
 
-            server.subscribe();
-            server.addStatusSubscriber(new ServerStatusListener(plugin.getProxy(), sender));
+            plugin.listenToStatus(server, sender, null);
             server.start();
             sender.sendMessage(new TextComponent(ChatColor.WHITE + "Starting server..."));
         } catch (APIException e) {

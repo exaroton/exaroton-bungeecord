@@ -27,27 +27,40 @@ public class ServerStatusListener extends ServerStatusSubscriber {
      */
     private String name;
 
-    public ServerStatusListener(ProxyServer proxy, String name) {
+    public ServerStatusListener(ProxyServer proxy) {
         this.proxy = proxy;
-        this.name = name;
     }
 
-    public ServerStatusListener(ProxyServer proxy, CommandSender sender) {
-        this.proxy = proxy;
-        this.sender = sender;
+    public ServerStatusListener setName(String name) {
+        if (name != null) {
+            this.name = name;
+        }
+        return this;
+    }
+
+    public ServerStatusListener setSender(CommandSender sender) {
+        if (sender != null) {
+            this.sender = sender;
+        }
+        return this;
     }
 
     @Override
     public void statusUpdate(Server oldServer, Server newServer) {
+        String serverName = this.name == null ? newServer.getName() : this.name;
         if (!oldServer.hasStatus(ServerStatus.ONLINE) && newServer.hasStatus(ServerStatus.ONLINE)) {
-            proxy.getServers().put( this.name == null ? newServer.getName() : this.name,
+            if (proxy.getServers().containsKey(serverName)) {
+                this.sendInfo("Server "+serverName+" already exists in bungee network");
+                return;
+            }
+            proxy.getServers().put(serverName,
                     proxy.constructServerInfo(newServer.getName(),
                             new InetSocketAddress(newServer.getAddress(), newServer.getPort()), newServer.getMotd(), false)
             );
             this.sendInfo(ChatColor.GREEN + "[exaroton] " + newServer.getAddress() + " went online!");
         }
         else if (oldServer.hasStatus(ServerStatus.ONLINE) && !newServer.hasStatus(ServerStatus.ONLINE)) {
-            proxy.getServers().remove(this.name == null ? newServer.getName() : this.name);
+            proxy.getServers().remove(serverName);
             this.sendInfo(ChatColor.RED + "[exaroton] " + newServer.getAddress() + " is no longer online!");
         }
     }
