@@ -89,12 +89,27 @@ public class ExarotonPlugin extends Plugin {
         ConfigurationProvider provider = ConfigurationProvider.getProvider(YamlConfiguration.class);
         this.config = provider.load(configFile);
         Configuration defaultConfig = provider.load(getResourceAsStream("config.yml"));
-        for (String key: defaultConfig.getKeys()) {
-            if (!config.getKeys().contains(key)) {
-                config.set(key, defaultConfig.get(key));
+        provider.save(this.addDefaults(config, defaultConfig), configFile);
+    }
+
+    /**
+     * update config recursively
+     * @param config current configuration
+     * @param defaults defaults
+     * @return config with defaults
+     */
+    private Configuration addDefaults(Configuration config, Configuration defaults) {
+        for (String key: defaults.getKeys()) {
+            Object value = defaults.get(key);
+
+            if (value instanceof Configuration) {
+                addDefaults(config.getSection(key), defaults.getSection(key));
             }
-            provider.save(config, configFile);
+            else if (!config.getKeys().contains(key)) {
+                config.set(key, value);
+            }
         }
+        return config;
     }
 
     /**
