@@ -25,6 +25,7 @@ public class StartServer extends SubCommand {
     public void execute(CommandSender sender, String[] args) {
         if (args.length != 1) {
             sender.sendMessage(new TextComponent(ChatColor.RED + "Usage: /exaroton start <server>"));
+            return;
         }
 
         try {
@@ -51,5 +52,10 @@ public class StartServer extends SubCommand {
     @Override
     public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
         return plugin.serverCompletions(args[0], ServerStatus.OFFLINE);
+    }
+
+    @Override
+    public String getPermission() {
+        return "exaroton.start";
     }
 }

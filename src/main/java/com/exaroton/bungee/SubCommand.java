@@ -51,4 +51,12 @@ public abstract class SubCommand implements TabExecutor {
      * @param args command arguments
      */
     public abstract void execute(CommandSender sender, String[] args);
+
+    /**
+     * get the required permission node
+     * @return permission node or null
+     */
+    public String getPermission() {
+        return null;
+    }
 }

@@ -69,6 +69,11 @@ public class ExarotonCommand extends Command implements TabExecutor {
             return;
         }
 
+        if (command.getPermission() != null && !sender.hasPermission(command.getPermission())) {
+            sender.sendMessage(new TextComponent(ChatColor.RED + "You don't have the required permissions to execute this command!"));
+            return;
+        }
+
         taskScheduler.runAsync(plugin, () -> command.execute(sender, Arrays.copyOfRange(args, 1, args.length)));
     }
 
@@ -97,8 +102,10 @@ public class ExarotonCommand extends Command implements TabExecutor {
                     .collect(Collectors.toList());
         }
         else {
-            return subCommands
-                    .get(args[0])
+            SubCommand command = subCommands
+                    .get(args[0]);
+            if (command == null || !sender.hasPermission(command.getPermission())) return new ArrayList<>();
+            return command
                     .onTabComplete(sender, Arrays.copyOfRange(args, 1, args.length));
         }
     }
