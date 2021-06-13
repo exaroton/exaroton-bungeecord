@@ -60,6 +60,7 @@ public class ExarotonPlugin extends Plugin {
         if (this.createExarotonClient()) {
             this.registerCommands();
             this.startWatchingServers();
+            this.autoStartServers();
         }
     }
 
@@ -260,7 +261,7 @@ public class ExarotonPlugin extends Plugin {
     /**
      * watch servers in the bungee config
      */
-    public void watchServers(){
+    public void watchServers() {
         try {
             Configuration bungeeConfig = ConfigurationProvider.getProvider(YamlConfiguration.class)
                     .load(new File(getProxy().getPluginsFolder().getParent(), "config.yml"));
@@ -285,5 +286,36 @@ public class ExarotonPlugin extends Plugin {
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Failed to load bungee config, cant watch servers!", e);
         }
+    }
+
+    /**
+     * automatically start servers from the config (asynchronous)
+     */
+    public void autoStartServers() {
+        if (!config.getBoolean("auto-start.enabled")) return;
+        this.getProxy().getScheduler().runAsync(this, () -> {
+            for (String query: config.getStringList("auto-start.servers")) {
+                try {
+                    Server server = this.findServer(query);
+
+                    if (server == null) {
+                        logger.log(Level.WARNING, "Can't start " + query + ": Server not found");
+                        continue;
+                    }
+
+                    if (!server.hasStatus(ServerStatus.OFFLINE)) {
+                        logger.log(Level.SEVERE, "Can't start " + server.getAddress() + ": Server isn't offline.");
+                        continue;
+                    }
+
+                    logger.log(Level.INFO, "Starting "+ server.getAddress());
+                    this.listenToStatus(server, null, null);
+                    server.start();
+
+                } catch (APIException e) {
+                    logger.log(Level.SEVERE, "Failed to start start "+ query +"!", e);
+                }
+            }
+        });
     }
 }

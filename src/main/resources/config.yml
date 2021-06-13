@@ -4,3 +4,9 @@ apiToken: 'example-token'
 # Watch servers in the bungee config and automatically remove them when they go offline
 # NOTE: This only works if you use .exaroton.me addresses in your bungee config.
 watch-servers: true
+
+# Automatically start servers when the proxy starts
+auto-start:
+  enabled: false
+  servers:
+    - example.exaroton.me
