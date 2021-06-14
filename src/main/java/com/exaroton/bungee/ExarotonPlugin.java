@@ -252,9 +252,7 @@ public class ExarotonPlugin extends Plugin {
      */
     public void startWatchingServers() {
         if (config.getBoolean("watch-servers")) {
-            this.getProxy().getScheduler().runAsync(this, () -> {
-                this.watchServers();
-            });
+            this.getProxy().getScheduler().runAsync(this, this::watchServers);
         }
     }
 
