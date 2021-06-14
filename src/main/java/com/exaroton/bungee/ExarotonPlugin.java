@@ -303,6 +303,12 @@ public class ExarotonPlugin extends Plugin {
                         continue;
                     }
 
+                    if (server.hasStatus(new int[]{ServerStatus.ONLINE, ServerStatus.STARTING,
+                            ServerStatus.LOADING, ServerStatus.PREPARING, ServerStatus.RESTARTING})) {
+                        logger.log(Level.INFO, server.getAddress() + " is already online or starting!");
+                        return;
+                    }
+
                     if (!server.hasStatus(ServerStatus.OFFLINE)) {
                         logger.log(Level.SEVERE, "Can't start " + server.getAddress() + ": Server isn't offline.");
                         continue;
