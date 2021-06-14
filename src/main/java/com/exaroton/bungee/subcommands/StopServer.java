@@ -4,7 +4,6 @@ import com.exaroton.api.APIException;
 import com.exaroton.api.server.Server;
 import com.exaroton.api.server.ServerStatus;
 import com.exaroton.bungee.ExarotonPlugin;
-import com.exaroton.bungee.ServerStatusListener;
 import com.exaroton.bungee.SubCommand;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
