@@ -337,17 +337,12 @@ public class ExarotonPlugin extends Plugin {
      * @param address exaroton address e.g. example.exaroton.me
      * @return server name e.g. lobby
      */
-    private String findServerName(String address) {
-        try {
-            this.getBungeeConfig();
-            Configuration servers = this.bungeeConfig.getSection("servers");
-            for (String serverName: servers.getKeys()) {
-                if (servers.getString(serverName + ".address").matches(Pattern.quote(address) + ":\\d+")) {
-                    return serverName;
-                }
+    public String findServerName(String address) {
+        Configuration servers = this.bungeeConfig.getSection("servers");
+        for (String serverName: servers.getKeys()) {
+            if (servers.getString(serverName + ".address").matches(Pattern.quote(address) + ":\\d+")) {
+                return serverName;
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
         return null;
     }
