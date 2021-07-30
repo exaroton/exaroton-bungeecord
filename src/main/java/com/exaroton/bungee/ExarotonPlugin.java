@@ -19,6 +19,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 public class ExarotonPlugin extends Plugin {
 
@@ -31,6 +32,11 @@ public class ExarotonPlugin extends Plugin {
      * main configuration (config.yml)
      */
     private Configuration config;
+
+    /**
+     * bungee config
+     */
+    private Configuration bungeeConfig;
 
     /**
      * logger
@@ -91,6 +97,9 @@ public class ExarotonPlugin extends Plugin {
         this.config = provider.load(configFile);
         Configuration defaultConfig = provider.load(getResourceAsStream("config.yml"));
         provider.save(this.addDefaults(config, defaultConfig), configFile);
+
+        this.bungeeConfig = ConfigurationProvider.getProvider(YamlConfiguration.class)
+                .load(new File(getProxy().getPluginsFolder().getParent(), "config.yml"));
     }
 
     /**
@@ -240,7 +249,7 @@ public class ExarotonPlugin extends Plugin {
             return;
         }
         server.subscribe();
-        ServerStatusListener listener = new ServerStatusListener(this.getProxy())
+        ServerStatusListener listener = new ServerStatusListener(this.getProxy(), this.getLogger())
                 .setSender(sender)
                 .setName(name);
         server.addStatusSubscriber(listener);
@@ -261,8 +270,7 @@ public class ExarotonPlugin extends Plugin {
      */
     public void watchServers() {
         try {
-            Configuration bungeeConfig = ConfigurationProvider.getProvider(YamlConfiguration.class)
-                    .load(new File(getProxy().getPluginsFolder().getParent(), "config.yml"));
+            Configuration bungeeConfig = this.getBungeeConfig();
             Configuration servers = bungeeConfig.getSection("servers");
             for (String serverName: servers.getKeys()) {
                 String address = servers.getString(serverName+".address");
@@ -304,17 +312,17 @@ public class ExarotonPlugin extends Plugin {
                     if (server.hasStatus(new int[]{ServerStatus.ONLINE, ServerStatus.STARTING,
                             ServerStatus.LOADING, ServerStatus.PREPARING, ServerStatus.RESTARTING})) {
                         logger.log(Level.INFO, server.getAddress() + " is already online or starting!");
-                        this.listenToStatus(server, null, null);
+                        this.listenToStatus(server, null, findServerName(server.getAddress()));
                         return;
                     }
 
-                    if (!server.hasStatus(ServerStatus.OFFLINE)) {
+                    if (!server.hasStatus(new int[]{ServerStatus.OFFLINE, ServerStatus.CRASHED})) {
                         logger.log(Level.SEVERE, "Can't start " + server.getAddress() + ": Server isn't offline.");
                         continue;
                     }
 
                     logger.log(Level.INFO, "Starting "+ server.getAddress());
-                    this.listenToStatus(server, null, null);
+                    this.listenToStatus(server, null, findServerName(server.getAddress()));
                     server.start();
 
                 } catch (APIException e) {
@@ -322,5 +330,33 @@ public class ExarotonPlugin extends Plugin {
                 }
             }
         });
+    }
+
+    /**
+     * try to find this server in the bungee config
+     * @param address exaroton address e.g. example.exaroton.me
+     * @return server name e.g. lobby
+     */
+    private String findServerName(String address) {
+        try {
+            this.getBungeeConfig();
+            Configuration servers = this.bungeeConfig.getSection("servers");
+            for (String serverName: servers.getKeys()) {
+                if (servers.getString(serverName + ".address").matches(Pattern.quote(address) + ":\\d+")) {
+                    return serverName;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * get bungeecord configuration
+     * @return bungee config
+     */
+    private Configuration getBungeeConfig() throws IOException {
+        return this.bungeeConfig;
     }
 }

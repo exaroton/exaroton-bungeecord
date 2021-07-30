@@ -9,6 +9,8 @@ import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 
 import java.net.InetSocketAddress;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ServerStatusListener extends ServerStatusSubscriber {
 
@@ -16,6 +18,11 @@ public class ServerStatusListener extends ServerStatusSubscriber {
      * bungee proxy
      */
     private final ProxyServer proxy;
+
+    /**
+     * plugin logger
+     */
+    private final Logger logger;
 
     /**
      * optional command sender
@@ -27,8 +34,9 @@ public class ServerStatusListener extends ServerStatusSubscriber {
      */
     private String name;
 
-    public ServerStatusListener(ProxyServer proxy) {
+    public ServerStatusListener(ProxyServer proxy, Logger logger) {
         this.proxy = proxy;
+        this.logger = logger;
     }
 
     public ServerStatusListener setName(String name) {
@@ -70,9 +78,9 @@ public class ServerStatusListener extends ServerStatusSubscriber {
      * @param message message
      */
     public void sendInfo(String message) {
-        TextComponent text = new TextComponent(message);
-        proxy.getConsole().sendMessage(text);
-        if (sender != null) {
+        logger.log(Level.INFO, message);
+        TextComponent text = new TextComponent(message + ChatColor.RESET);
+        if (sender != null && !sender.equals(proxy.getConsole())) {
             sender.sendMessage(text);
             //unsubscribe user from further updates
             this.sender = null;
