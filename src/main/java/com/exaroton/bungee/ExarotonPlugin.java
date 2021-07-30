@@ -65,8 +65,7 @@ public class ExarotonPlugin extends Plugin {
         }
         if (this.createExarotonClient()) {
             this.registerCommands();
-            this.startWatchingServers();
-            this.autoStartServers();
+            this.runAsyncTasks();
         }
     }
 
@@ -259,10 +258,13 @@ public class ExarotonPlugin extends Plugin {
     /**
      * start watching servers in the bungee config
      */
-    public void startWatchingServers() {
-        if (config.getBoolean("watch-servers")) {
-            this.getProxy().getScheduler().runAsync(this, this::watchServers);
-        }
+    public void runAsyncTasks() {
+        this.getProxy().getScheduler().runAsync(this, () -> {
+            if(config.getBoolean("watch-servers")) {
+                this.watchServers();
+            }
+            this.autoStartServers();
+        });
     }
 
     /**
@@ -299,37 +301,35 @@ public class ExarotonPlugin extends Plugin {
      */
     public void autoStartServers() {
         if (!config.getBoolean("auto-start.enabled")) return;
-        this.getProxy().getScheduler().runAsync(this, () -> {
-            for (String query: config.getStringList("auto-start.servers")) {
-                try {
-                    Server server = this.findServer(query);
+        for (String query: config.getStringList("auto-start.servers")) {
+            try {
+                Server server = this.findServer(query);
 
-                    if (server == null) {
-                        logger.log(Level.WARNING, "Can't start " + query + ": Server not found");
-                        continue;
-                    }
-
-                    if (server.hasStatus(new int[]{ServerStatus.ONLINE, ServerStatus.STARTING,
-                            ServerStatus.LOADING, ServerStatus.PREPARING, ServerStatus.RESTARTING})) {
-                        logger.log(Level.INFO, server.getAddress() + " is already online or starting!");
-                        this.listenToStatus(server, null, findServerName(server.getAddress()));
-                        return;
-                    }
-
-                    if (!server.hasStatus(new int[]{ServerStatus.OFFLINE, ServerStatus.CRASHED})) {
-                        logger.log(Level.SEVERE, "Can't start " + server.getAddress() + ": Server isn't offline.");
-                        continue;
-                    }
-
-                    logger.log(Level.INFO, "Starting "+ server.getAddress());
-                    this.listenToStatus(server, null, findServerName(server.getAddress()));
-                    server.start();
-
-                } catch (APIException e) {
-                    logger.log(Level.SEVERE, "Failed to start start "+ query +"!", e);
+                if (server == null) {
+                    logger.log(Level.WARNING, "Can't start " + query + ": Server not found");
+                    continue;
                 }
+
+                if (server.hasStatus(new int[]{ServerStatus.ONLINE, ServerStatus.STARTING,
+                        ServerStatus.LOADING, ServerStatus.PREPARING, ServerStatus.RESTARTING})) {
+                    logger.log(Level.INFO, server.getAddress() + " is already online or starting!");
+                    this.listenToStatus(server, null, findServerName(server.getAddress()));
+                    return;
+                }
+
+                if (!server.hasStatus(new int[]{ServerStatus.OFFLINE, ServerStatus.CRASHED})) {
+                    logger.log(Level.SEVERE, "Can't start " + server.getAddress() + ": Server isn't offline.");
+                    continue;
+                }
+
+                logger.log(Level.INFO, "Starting "+ server.getAddress());
+                this.listenToStatus(server, null, findServerName(server.getAddress()));
+                server.start();
+
+            } catch (APIException e) {
+                logger.log(Level.SEVERE, "Failed to start start "+ query +"!", e);
             }
-        });
+        }
     }
 
     /**
