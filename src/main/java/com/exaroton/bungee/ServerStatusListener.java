@@ -55,7 +55,7 @@ public class ServerStatusListener extends ServerStatusSubscriber {
             }
             proxy.getServers().put(serverName,
                     proxy.constructServerInfo(newServer.getName(),
-                            new InetSocketAddress(newServer.getAddress(), newServer.getPort()), newServer.getMotd(), false)
+                            new InetSocketAddress(newServer.getHost(), newServer.getPort()), newServer.getMotd(), false)
             );
             this.sendInfo(ChatColor.GREEN + "[exaroton] " + newServer.getAddress() + " went online!");
         }
