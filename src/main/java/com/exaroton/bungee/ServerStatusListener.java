@@ -74,12 +74,25 @@ public class ServerStatusListener extends ServerStatusSubscriber {
                 return;
             }
             proxy.getServers().put(serverName, plugin.constructServerInfo(serverName, newServer, restricted));
-            this.sendInfo(ChatColor.GREEN + "[exaroton] " + newServer.getAddress() + " went online!");
+            this.sendInfo(generateText(serverName, true));
         }
         else if (oldServer.hasStatus(ServerStatus.ONLINE) && !newServer.hasStatus(ServerStatus.ONLINE)) {
             proxy.getServers().remove(serverName);
-            this.sendInfo(ChatColor.RED + "[exaroton] " + newServer.getAddress() + " is no longer online!");
+            this.sendInfo(generateText(serverName, false));
         }
+    }
+
+    private String generateText(String serverName, boolean online) {
+        String text = "[" + ChatColor.GREEN +"exaroton" + ChatColor.WHITE + "] Server " + ChatColor.GREEN + serverName + ChatColor.WHITE + " went ";
+        if (online) {
+            text += ChatColor.GREEN +"online";
+        }
+        else {
+            text += ChatColor.RED +"offline";
+        }
+
+        text += ChatColor.WHITE + ".";
+        return text;
     }
 
     /**
