@@ -8,7 +8,6 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 
-import java.net.InetSocketAddress;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,6 +62,10 @@ public class ServerStatusListener extends ServerStatusSubscriber {
         return this;
     }
 
+    public String getName(Server server) {
+        return name != null ? name : server.getName();
+    }
+
     public ServerStatusListener setSender(CommandSender sender, int expectedStatus) {
         if (sender != null) {
             this.sender = sender;
@@ -80,25 +83,12 @@ public class ServerStatusListener extends ServerStatusSubscriber {
                 return;
             }
             proxy.getServers().put(serverName, plugin.constructServerInfo(serverName, newServer, restricted));
-            this.sendInfo(generateText(serverName, true), newServer.hasStatus(expectedStatus));
+            this.sendInfo(Message.statusChange(serverName, true).getMessage(), newServer.hasStatus(expectedStatus));
         }
         else if (oldServer.hasStatus(ServerStatus.ONLINE) && !newServer.hasStatus(ServerStatus.ONLINE)) {
             proxy.getServers().remove(serverName);
-            this.sendInfo(generateText(serverName, false), newServer.hasStatus(expectedStatus));
+            this.sendInfo(Message.statusChange(serverName, false).getMessage(), newServer.hasStatus(expectedStatus));
         }
-    }
-
-    private String generateText(String serverName, boolean online) {
-        String text = "[" + ChatColor.GREEN +"exaroton" + ChatColor.WHITE + "] Server " + ChatColor.GREEN + serverName + ChatColor.WHITE + " went ";
-        if (online) {
-            text += ChatColor.GREEN +"online";
-        }
-        else {
-            text += ChatColor.RED +"offline";
-        }
-
-        text += ChatColor.WHITE + ".";
-        return text;
     }
 
     /**

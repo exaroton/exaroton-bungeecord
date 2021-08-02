@@ -3,14 +3,15 @@ package com.exaroton.bungee;
 import com.exaroton.bungee.subcommands.RestartServer;
 import com.exaroton.bungee.subcommands.StartServer;
 import com.exaroton.bungee.subcommands.StopServer;
-import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
 import net.md_5.bungee.api.scheduler.TaskScheduler;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 public class ExarotonCommand extends Command implements TabExecutor {
@@ -61,18 +62,18 @@ public class ExarotonCommand extends Command implements TabExecutor {
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(new TextComponent(ChatColor.RED + this.getUsage()));
+            sender.sendMessage(this.getUsage());
             return;
         }
 
         SubCommand command = this.subCommands.get(args[0]);
         if (command == null) {
-            sender.sendMessage(new TextComponent(ChatColor.RED + "Unknown sub-command!"));
+            sender.sendMessage(Message.error("Unknown sub-command.").toComponent());
             return;
         }
 
         if (command.getPermission() != null && !sender.hasPermission(command.getPermission())) {
-            sender.sendMessage(new TextComponent(ChatColor.RED + "You don't have the required permissions to execute this command!"));
+            sender.sendMessage(Message.error("You don't have the required permissions to execute this command.").toComponent());
             return;
         }
 
@@ -83,15 +84,9 @@ public class ExarotonCommand extends Command implements TabExecutor {
      * get list of available subcommands
      * @return command usage
      */
-    private String getUsage() {
-        String response;
-        if (subCommands.size() == 0) {
-            response = "No sub commands registered!";
-        }
-        else {
-            response = "Valid sub-commands:\n "+ String.join("\n", subCommands.keySet());
-        }
-        return response;
+    private TextComponent getUsage() {
+        return (subCommands.size() == 0 ? Message.error("No sub-commands registered.") :
+                Message.subCommandList(subCommands.keySet())).toComponent();
     }
 
     @Override

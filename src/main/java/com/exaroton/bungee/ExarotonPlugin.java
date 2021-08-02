@@ -161,6 +161,7 @@ public class ExarotonPlugin extends Plugin {
      * find a server
      * if a server can't be uniquely identified then the id will be preferred
      * @param query server name, address or id
+     * @param force skip cache
      * @return found server or null
      * @throws APIException exceptions from the API
      */
@@ -243,8 +244,8 @@ public class ExarotonPlugin extends Plugin {
      * @param name server name in bungee server list
      * @param expectedStatus status user is waiting for
      */
-    public void listenToStatus(Server server, CommandSender sender, String name, int expectedStatus) {
-        this.listenToStatus(server, sender, name, expectedStatus, false);
+    public ServerStatusListener listenToStatus(Server server, CommandSender sender, String name, int expectedStatus) {
+        return this.listenToStatus(server, sender, name, expectedStatus, false);
     }
 
     /**
@@ -256,12 +257,11 @@ public class ExarotonPlugin extends Plugin {
      * @param expectedStatus status user is waiting for
      * @param restricted is server restricted
      */
-    public void listenToStatus(Server server, CommandSender sender, String name, int expectedStatus, boolean restricted) {
+    public ServerStatusListener listenToStatus(Server server, CommandSender sender, String name, int expectedStatus, boolean restricted) {
         if (statusListeners.containsKey(server.getId())) {
-            statusListeners.get(server.getId())
+            return statusListeners.get(server.getId())
                     .setSender(sender, expectedStatus)
                     .setName(name);
-            return;
         }
         server.subscribe();
         ServerStatusListener listener = new ServerStatusListener(this, restricted)
@@ -269,6 +269,7 @@ public class ExarotonPlugin extends Plugin {
                 .setName(name);
         server.addStatusSubscriber(listener);
         statusListeners.put(server.getId(), listener);
+        return listener;
     }
 
     /**
