@@ -243,6 +243,18 @@ public class ExarotonPlugin extends Plugin {
      * @param name server name in bungee server list
      */
     public void listenToStatus(Server server, CommandSender sender, String name) {
+        this.listenToStatus(server, sender, name, false);
+    }
+
+    /**
+     * listen to server status
+     * if there already is a status listener then add the sender and/or name
+     * @param server server to subscribe to
+     * @param sender command sender to update
+     * @param name server name in bungee server list
+     * @param restricted is server restricted
+     */
+    public void listenToStatus(Server server, CommandSender sender, String name, boolean restricted) {
         if (statusListeners.containsKey(server.getId())) {
             statusListeners.get(server.getId())
                     .setSender(sender)
@@ -250,7 +262,7 @@ public class ExarotonPlugin extends Plugin {
             return;
         }
         server.subscribe();
-        ServerStatusListener listener = new ServerStatusListener(this.getProxy(), this.getLogger())
+        ServerStatusListener listener = new ServerStatusListener(this, restricted)
                 .setSender(sender)
                 .setName(name);
         server.addStatusSubscriber(listener);
@@ -285,7 +297,7 @@ public class ExarotonPlugin extends Plugin {
                 this.getProxy().getServers().remove(name);
                 logger.info("Server " + address + " is offline, removed it from the server list!");
             }
-            this.listenToStatus(server, null, name);
+            this.listenToStatus(server, null, name, restricted);
         } catch (APIException e) {
             logger.log(Level.SEVERE, "Failed to access API, not watching "+address);
         }

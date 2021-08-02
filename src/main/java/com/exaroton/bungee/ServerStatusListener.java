@@ -25,6 +25,11 @@ public class ServerStatusListener extends ServerStatusSubscriber {
     private final Logger logger;
 
     /**
+     * exaroton plugin
+     */
+    private final ExarotonPlugin plugin;
+
+    /**
      * optional command sender
      */
     private CommandSender sender;
@@ -34,9 +39,16 @@ public class ServerStatusListener extends ServerStatusSubscriber {
      */
     private String name;
 
-    public ServerStatusListener(ProxyServer proxy, Logger logger) {
-        this.proxy = proxy;
-        this.logger = logger;
+    /**
+     * is this server restricted
+     */
+    private final boolean restricted;
+
+    public ServerStatusListener(ExarotonPlugin plugin, boolean restricted) {
+        this.proxy = plugin.getProxy();
+        this.logger = plugin.getLogger();
+        this.plugin = plugin;
+        this.restricted = restricted;
     }
 
     public ServerStatusListener setName(String name) {
@@ -61,10 +73,7 @@ public class ServerStatusListener extends ServerStatusSubscriber {
                 this.sendInfo("Server "+serverName+" already exists in bungee network");
                 return;
             }
-            proxy.getServers().put(serverName,
-                    proxy.constructServerInfo(newServer.getName(),
-                            new InetSocketAddress(newServer.getHost(), newServer.getPort()), newServer.getMotd(), false)
-            );
+            proxy.getServers().put(serverName, plugin.constructServerInfo(serverName, newServer, restricted));
             this.sendInfo(ChatColor.GREEN + "[exaroton] " + newServer.getAddress() + " went online!");
         }
         else if (oldServer.hasStatus(ServerStatus.ONLINE) && !newServer.hasStatus(ServerStatus.ONLINE)) {
