@@ -241,9 +241,10 @@ public class ExarotonPlugin extends Plugin {
      * @param server server to subscribe to
      * @param sender command sender to update
      * @param name server name in bungee server list
+     * @param expectedStatus status user is waiting for
      */
-    public void listenToStatus(Server server, CommandSender sender, String name) {
-        this.listenToStatus(server, sender, name, false);
+    public void listenToStatus(Server server, CommandSender sender, String name, int expectedStatus) {
+        this.listenToStatus(server, sender, name, expectedStatus, false);
     }
 
     /**
@@ -252,18 +253,19 @@ public class ExarotonPlugin extends Plugin {
      * @param server server to subscribe to
      * @param sender command sender to update
      * @param name server name in bungee server list
+     * @param expectedStatus status user is waiting for
      * @param restricted is server restricted
      */
-    public void listenToStatus(Server server, CommandSender sender, String name, boolean restricted) {
+    public void listenToStatus(Server server, CommandSender sender, String name, int expectedStatus, boolean restricted) {
         if (statusListeners.containsKey(server.getId())) {
             statusListeners.get(server.getId())
-                    .setSender(sender)
+                    .setSender(sender, expectedStatus)
                     .setName(name);
             return;
         }
         server.subscribe();
         ServerStatusListener listener = new ServerStatusListener(this, restricted)
-                .setSender(sender)
+                .setSender(sender, expectedStatus)
                 .setName(name);
         server.addStatusSubscriber(listener);
         statusListeners.put(server.getId(), listener);
@@ -297,7 +299,7 @@ public class ExarotonPlugin extends Plugin {
                 this.getProxy().getServers().remove(name);
                 logger.info("Server " + address + " is offline, removed it from the server list!");
             }
-            this.listenToStatus(server, null, name, restricted);
+            this.listenToStatus(server, null, name, -1 , restricted);
         } catch (APIException e) {
             logger.log(Level.SEVERE, "Failed to access API, not watching "+address);
         }
@@ -345,7 +347,7 @@ public class ExarotonPlugin extends Plugin {
                 if (server.hasStatus(new int[]{ServerStatus.ONLINE, ServerStatus.STARTING,
                         ServerStatus.LOADING, ServerStatus.PREPARING, ServerStatus.RESTARTING})) {
                     logger.log(Level.INFO, server.getAddress() + " is already online or starting!");
-                    this.listenToStatus(server, null, findServerName(server.getAddress()));
+                    this.listenToStatus(server, null, findServerName(server.getAddress()), ServerStatus.ONLINE);
                     return;
                 }
 
@@ -355,7 +357,7 @@ public class ExarotonPlugin extends Plugin {
                 }
 
                 logger.log(Level.INFO, "Starting "+ server.getAddress());
-                this.listenToStatus(server, null, findServerName(server.getAddress()));
+                this.listenToStatus(server, null, findServerName(server.getAddress()), ServerStatus.ONLINE);
                 server.start();
 
             } catch (APIException e) {

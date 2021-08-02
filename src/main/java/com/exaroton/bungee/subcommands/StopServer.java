@@ -39,7 +39,7 @@ public class StopServer extends SubCommand {
                 return;
             }
 
-            plugin.listenToStatus(server, sender, plugin.findServerName(server.getAddress()));
+            plugin.listenToStatus(server, sender, plugin.findServerName(server.getAddress()), ServerStatus.OFFLINE);
             server.stop();
             sender.sendMessage(new TextComponent(ChatColor.WHITE + "Stopping server..."));
         } catch (APIException e) {

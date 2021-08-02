@@ -44,6 +44,11 @@ public class ServerStatusListener extends ServerStatusSubscriber {
      */
     private final boolean restricted;
 
+    /**
+     * server status that the user is waiting for
+     */
+    private int expectedStatus;
+
     public ServerStatusListener(ExarotonPlugin plugin, boolean restricted) {
         this.proxy = plugin.getProxy();
         this.logger = plugin.getLogger();
@@ -58,9 +63,10 @@ public class ServerStatusListener extends ServerStatusSubscriber {
         return this;
     }
 
-    public ServerStatusListener setSender(CommandSender sender) {
+    public ServerStatusListener setSender(CommandSender sender, int expectedStatus) {
         if (sender != null) {
             this.sender = sender;
+            this.expectedStatus = expectedStatus;
         }
         return this;
     }
@@ -70,15 +76,15 @@ public class ServerStatusListener extends ServerStatusSubscriber {
         String serverName = this.name == null ? newServer.getName() : this.name;
         if (!oldServer.hasStatus(ServerStatus.ONLINE) && newServer.hasStatus(ServerStatus.ONLINE)) {
             if (proxy.getServers().containsKey(serverName)) {
-                this.sendInfo("Server "+serverName+" already exists in bungee network");
+                this.sendInfo("Server "+serverName+" already exists in bungee network", true);
                 return;
             }
             proxy.getServers().put(serverName, plugin.constructServerInfo(serverName, newServer, restricted));
-            this.sendInfo(generateText(serverName, true));
+            this.sendInfo(generateText(serverName, true), newServer.hasStatus(expectedStatus));
         }
         else if (oldServer.hasStatus(ServerStatus.ONLINE) && !newServer.hasStatus(ServerStatus.ONLINE)) {
             proxy.getServers().remove(serverName);
-            this.sendInfo(generateText(serverName, false));
+            this.sendInfo(generateText(serverName, false), newServer.hasStatus(expectedStatus));
         }
     }
 
@@ -99,13 +105,15 @@ public class ServerStatusListener extends ServerStatusSubscriber {
      * send message to all subscribed sources
      * @param message message
      */
-    public void sendInfo(String message) {
+    public void sendInfo(String message, boolean unsubscribe) {
         logger.log(Level.INFO, message);
         TextComponent text = new TextComponent(message + ChatColor.RESET);
         if (sender != null && !sender.equals(proxy.getConsole())) {
             sender.sendMessage(text);
-            //unsubscribe user from further updates
-            this.sender = null;
+            if (unsubscribe) {
+                //unsubscribe user from further updates
+                this.sender = null;
+            }
         }
     }
 }

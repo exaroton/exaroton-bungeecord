@@ -11,19 +11,19 @@ import net.md_5.bungee.api.chat.TextComponent;
 
 import java.util.logging.Level;
 
-public class StartServer extends SubCommand {
+public class RestartServer extends SubCommand {
 
     /**
      * @param plugin exaroton plugin
      */
-    public StartServer(ExarotonPlugin plugin) {
-        super("start", plugin);
+    public RestartServer(ExarotonPlugin plugin) {
+        super("restart", plugin);
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length != 1) {
-            sender.sendMessage(new TextComponent(ChatColor.RED + "Usage: /exaroton start <server>"));
+            sender.sendMessage(new TextComponent(ChatColor.RED + "Usage: /exaroton restart <server>"));
             return;
         }
 
@@ -34,14 +34,14 @@ public class StartServer extends SubCommand {
                 return;
             }
 
-            if (!server.hasStatus(ServerStatus.OFFLINE)) {
-                sender.sendMessage(new TextComponent(ChatColor.RED + "Server is not offline"));
+            if (!server.hasStatus(ServerStatus.ONLINE)) {
+                sender.sendMessage(new TextComponent(ChatColor.RED + "Server is not online"));
                 return;
             }
 
             plugin.listenToStatus(server, sender, plugin.findServerName(server.getAddress()), ServerStatus.ONLINE);
-            server.start();
-            sender.sendMessage(new TextComponent(ChatColor.WHITE + "Starting server..."));
+            server.restart();
+            sender.sendMessage(new TextComponent(ChatColor.WHITE + "Restarting server..."));
         } catch (APIException e) {
             logger.log(Level.SEVERE, "An API Error occurred!", e);
             sender.sendMessage(new TextComponent(ChatColor.RED + "An API Error occurred. Check your log for more Info!"));
@@ -50,11 +50,11 @@ public class StartServer extends SubCommand {
 
     @Override
     public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
-        return plugin.serverCompletions(args[0], ServerStatus.OFFLINE);
+        return plugin.serverCompletions(args[0], ServerStatus.ONLINE);
     }
 
     @Override
     public String getPermission() {
-        return "exaroton.start";
+        return "exaroton.restart";
     }
 }
