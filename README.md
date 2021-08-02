@@ -21,6 +21,7 @@ The commands require the permission nodes `exaroton.start` and
 ### Watch servers
 Automatically remove offline servers specified in the bungee config
 from the network and add them again when they go online.
+This also ensures the proxy always uses the correct host and port.
 
 This can be disabled in the config.
 
