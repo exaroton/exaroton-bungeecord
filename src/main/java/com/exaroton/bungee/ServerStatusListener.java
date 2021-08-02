@@ -76,6 +76,7 @@ public class ServerStatusListener extends ServerStatusSubscriber {
 
     @Override
     public void statusUpdate(Server oldServer, Server newServer) {
+        plugin.updateServer(newServer);
         String serverName = this.name == null ? newServer.getName() : this.name;
         if (!oldServer.hasStatus(ServerStatus.ONLINE) && newServer.hasStatus(ServerStatus.ONLINE)) {
             if (proxy.getServers().containsKey(serverName)) {
@@ -83,11 +84,11 @@ public class ServerStatusListener extends ServerStatusSubscriber {
                 return;
             }
             proxy.getServers().put(serverName, plugin.constructServerInfo(serverName, newServer, restricted));
-            this.sendInfo(Message.statusChange(serverName, true).getMessage(), newServer.hasStatus(expectedStatus));
+            this.sendInfo(Message.statusChange(serverName, true).getMessage(), expectedStatus == ServerStatus.ONLINE);
         }
         else if (oldServer.hasStatus(ServerStatus.ONLINE) && !newServer.hasStatus(ServerStatus.ONLINE)) {
             proxy.getServers().remove(serverName);
-            this.sendInfo(Message.statusChange(serverName, false).getMessage(), newServer.hasStatus(expectedStatus));
+            this.sendInfo(Message.statusChange(serverName, false).getMessage(), expectedStatus == ServerStatus.OFFLINE);
         }
     }
 

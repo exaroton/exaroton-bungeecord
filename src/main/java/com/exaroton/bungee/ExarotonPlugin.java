@@ -420,4 +420,15 @@ public class ExarotonPlugin extends Plugin {
     private Configuration getBungeeConfig() {
         return this.bungeeConfig;
     }
+
+    public void updateServer(Server server) {
+        if (serverCache == null) return;
+        int index = 0;
+        for (; index < serverCache.length; index++) {
+            if (serverCache[index].getId().equals(server.getId())) break;
+        }
+        if (index < serverCache.length) {
+            serverCache[index] = server;
+        }
+    }
 }
