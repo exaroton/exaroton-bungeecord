@@ -5,6 +5,7 @@ import com.exaroton.api.ExarotonClient;
 import com.exaroton.api.server.Server;
 import com.exaroton.api.server.ServerStatus;
 import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
 import net.md_5.bungee.config.Configuration;
@@ -14,6 +15,7 @@ import net.md_5.bungee.config.YamlConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -162,8 +164,8 @@ public class ExarotonPlugin extends Plugin {
      * @return found server or null
      * @throws APIException exceptions from the API
      */
-    public Server findServer(String query) throws APIException {
-        Server[] servers = fetchServers();
+    public Server findServer(String query, boolean force) throws APIException {
+        Server[] servers = serverCache != null && !force ? serverCache : fetchServers();
 
         servers = Arrays.stream(servers)
                 .filter(server -> matchExact(server, query))
@@ -260,40 +262,58 @@ public class ExarotonPlugin extends Plugin {
      */
     public void runAsyncTasks() {
         this.getProxy().getScheduler().runAsync(this, () -> {
-            if(config.getBoolean("watch-servers")) {
-                this.watchServers();
-            }
+            this.watchServers();
             this.autoStartServers();
         });
     }
 
+
     /**
-     * watch servers in the bungee config
+     * watch this server
+     * @param name server name (lobby)
+     * @param address server address (example.exaroton.me)
+     * @param restricted is server restricted
+     */
+    public void watchServer(String name, String address, boolean restricted) {
+        try {
+            Server server = this.findServer(address, false);
+            if (server.hasStatus(ServerStatus.ONLINE)) {
+                logger.info("Updating server address and port...");
+                this.getProxy().getServers().remove(name);
+                this.getProxy().getServers().put(name, this.constructServerInfo(name, server, restricted));
+            } else {
+                this.getProxy().getServers().remove(name);
+                logger.info("Server " + address + " is offline, removed it from the server list!");
+            }
+            this.listenToStatus(server, null, name);
+        } catch (APIException e) {
+            logger.log(Level.SEVERE, "Failed to access API, not watching "+address);
+        }
+    }
+
+    /**
+     * watch servers in bungee config
      */
     public void watchServers() {
-        try {
-            Configuration bungeeConfig = this.getBungeeConfig();
-            Configuration servers = bungeeConfig.getSection("servers");
-            for (String serverName: servers.getKeys()) {
-                String address = servers.getString(serverName+".address");
-                address = address.replaceAll(":\\d+$", "");
-                if (address.endsWith(".exaroton.me")) {
-                    logger.info("Found exaroton server: " + address + ", start watching status changes");
-                    try {
-                        Server server = this.findServer(address);
-                        if (!server.hasStatus(ServerStatus.ONLINE)) {
-                            this.getProxy().getServers().remove(serverName);
-                            logger.info("Server " + address + " is offline, removed it from the server list!");
-                        }
-                        this.listenToStatus(server, null, serverName);
-                    } catch (APIException e) {
-                        logger.log(Level.SEVERE, "Failed to access API, not watching "+address);
-                    }
-                }
+        if (!config.getBoolean("watch-servers", false)) return;
+        Configuration servers = bungeeConfig.getSection("servers");
+        for (String name: servers.getKeys()) {
+            String address = servers.getString(name+".address");
+            if (address.matches(".*\\.exaroton\\.me(:\\d+)?")) {
+                this.watchServer(name, address, servers.getBoolean(name+".restricted", false));
             }
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Failed to load bungee config, cant watch servers!", e);
         }
+    }
+
+    /**
+     * generate server info
+     * @param name server name in network
+     * @param server server
+     * @param restricted restricted
+     * @return bungee server info
+     */
+    public ServerInfo constructServerInfo(String name, Server server, boolean restricted) {
+        return this.getProxy().constructServerInfo(name, new InetSocketAddress(server.getHost(), server.getPort()), server.getMotd(), restricted);
     }
 
     /**
@@ -303,7 +323,7 @@ public class ExarotonPlugin extends Plugin {
         if (!config.getBoolean("auto-start.enabled")) return;
         for (String query: config.getStringList("auto-start.servers")) {
             try {
-                Server server = this.findServer(query);
+                Server server = this.findServer(query, false);
 
                 if (server == null) {
                     logger.log(Level.WARNING, "Can't start " + query + ": Server not found");
@@ -351,7 +371,7 @@ public class ExarotonPlugin extends Plugin {
      * get bungeecord configuration
      * @return bungee config
      */
-    private Configuration getBungeeConfig() throws IOException {
+    private Configuration getBungeeConfig() {
         return this.bungeeConfig;
     }
 }

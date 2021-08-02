@@ -28,7 +28,7 @@ public class StartServer extends SubCommand {
         }
 
         try {
-            Server server = plugin.findServer(args[0]);
+            Server server = plugin.findServer(args[0], true);
             if (server == null) {
                 sender.sendMessage(new TextComponent(ChatColor.RED + "Server not found!"));
                 return;
