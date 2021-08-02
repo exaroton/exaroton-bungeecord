@@ -9,11 +9,11 @@ public class Message {
 
     public static final String prefix = ChatColor.GRAY + "["+ ChatColor.GREEN +"exaroton"+ ChatColor.GRAY + "] ";
 
-    public static final TextComponent SERVER_NOT_FOUND = Message.error("Server wasn't found.").toComponent();
+    public static final TextComponent SERVER_NOT_FOUND = Message.error("Server not found.").toComponent();
 
-    public static final TextComponent SERVER_NOT_ONLINE = Message.error("Server isn't online.").toComponent();
+    public static final TextComponent SERVER_NOT_ONLINE = Message.error("Server is not online.").toComponent();
 
-    public static final TextComponent SERVER_NOT_OFFLINE = Message.error("Server isn't offline.").toComponent();
+    public static final TextComponent SERVER_NOT_OFFLINE = Message.error("Server is not offline.").toComponent();
 
     public static final TextComponent API_ERROR = Message.error("An API Error occurred. Check your log for details!").toComponent();
 
@@ -52,7 +52,7 @@ public class Message {
      * @param online is server online
      */
     public static Message statusChange(String name, boolean online) {
-        return new Message("Server" + ChatColor.GREEN + name + ChatColor.GRAY + " went " +
+        return new Message("Server " + ChatColor.GREEN + name + ChatColor.GRAY + " went " +
                 (online ? ChatColor.GREEN + "online" : ChatColor.RED + "offline") + ChatColor.GRAY + ".");
     }
 

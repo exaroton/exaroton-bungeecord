@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class ExarotonPlugin extends Plugin {
 
@@ -51,6 +52,12 @@ public class ExarotonPlugin extends Plugin {
     private Server[] serverCache;
 
     /**
+     * exaroton servers from bungee config
+     * name -> address
+     */
+    private Map<String, String> bungeeServers = new HashMap<>();
+
+    /**
      * server status listeners
      * serverid -> status listener
      */
@@ -60,6 +67,7 @@ public class ExarotonPlugin extends Plugin {
     public void onEnable() {
         try {
             this.loadConfig();
+            this.loadBungeeConfig();
         }
         catch (IOException e) {
             logger.log(Level.SEVERE, "Unable to load config file!", e);
@@ -98,9 +106,18 @@ public class ExarotonPlugin extends Plugin {
         this.config = provider.load(configFile);
         Configuration defaultConfig = provider.load(getResourceAsStream("config.yml"));
         provider.save(this.addDefaults(config, defaultConfig), configFile);
+    }
 
+    private void loadBungeeConfig() throws IOException {
         this.bungeeConfig = ConfigurationProvider.getProvider(YamlConfiguration.class)
                 .load(new File(getProxy().getPluginsFolder().getParent(), "config.yml"));
+        Configuration servers = bungeeConfig.getSection("servers");
+        for (String name: servers.getKeys()) {
+            String address = servers.getString(name+".address");
+            if (address.matches(".*\\.exaroton\\.me(:\\d+)?")) {
+                this.bungeeServers.put(name, address.replaceAll(":\\d+", ""));
+            }
+        }
     }
 
     /**
@@ -166,10 +183,15 @@ public class ExarotonPlugin extends Plugin {
      * @throws APIException exceptions from the API
      */
     public Server findServer(String query, boolean force) throws APIException {
+        if (bungeeServers.containsKey(query)) {
+            query = bungeeServers.get(query);
+        }
+        final String finalQuery = query;
+
         Server[] servers = serverCache != null && !force ? serverCache : fetchServers();
 
         servers = Arrays.stream(servers)
-                .filter(server -> matchExact(server, query))
+                .filter(server -> matchExact(server, finalQuery))
                 .toArray(Server[]::new);
 
         switch (servers.length) {
@@ -180,7 +202,7 @@ public class ExarotonPlugin extends Plugin {
                 return servers[0];
 
             default:
-                Optional<Server> server = Arrays.stream(servers).filter(s -> s.getId().equals(query)).findFirst();
+                Optional<Server> server = Arrays.stream(servers).filter(s -> s.getId().equals(finalQuery)).findFirst();
                 return server.orElse(servers[0]);
         }
     }
@@ -221,7 +243,7 @@ public class ExarotonPlugin extends Plugin {
             }
         }
         Server[] matching = Arrays.stream(serverCache).filter(server -> matchBeginning(server, query) && server.hasStatus(status)).toArray(Server[]::new);
-        ArrayList<String> result = new ArrayList<>();
+        List<String> result = this.bungeeServers.keySet().stream().filter(s -> s.startsWith(query)).collect(Collectors.toList());
 
         for (Server server: matching) {
             result.add(server.getName());
@@ -293,16 +315,16 @@ public class ExarotonPlugin extends Plugin {
         try {
             Server server = this.findServer(address, false);
             if (server.hasStatus(ServerStatus.ONLINE)) {
-                logger.info("Updating server address and port...");
+                logger.info("Updating server address and port for " + name + "...");
                 this.getProxy().getServers().remove(name);
                 this.getProxy().getServers().put(name, this.constructServerInfo(name, server, restricted));
             } else {
                 this.getProxy().getServers().remove(name);
-                logger.info("Server " + address + " is offline, removed it from the server list!");
+                logger.info("Server " + name + " is offline, removed it from the server list!");
             }
             this.listenToStatus(server, null, name, -1 , restricted);
         } catch (APIException e) {
-            logger.log(Level.SEVERE, "Failed to access API, not watching "+address);
+            logger.log(Level.SEVERE, "Failed to access API, not watching "+name);
         }
     }
 
