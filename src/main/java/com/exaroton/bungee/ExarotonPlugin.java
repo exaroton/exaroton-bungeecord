@@ -367,7 +367,19 @@ public class ExarotonPlugin extends Plugin {
                     continue;
                 }
 
-                if (server.hasStatus(new int[]{ServerStatus.ONLINE, ServerStatus.STARTING,
+                if (server.hasStatus(ServerStatus.ONLINE)) {
+                    String name = findServerName(server.getAddress());
+                    if (name == null) {
+                        logger.log(Level.INFO, server.getAddress() + " is already online, adding it to proxy!");
+                        this.getProxy().getServers().put(server.getName(), this.constructServerInfo(server.getName(), server, false));
+                    } else {
+                        logger.log(Level.INFO, server.getAddress() + " is already online!");
+                    }
+                    this.listenToStatus(server, null, name, -1);
+                    return;
+                }
+
+                if (server.hasStatus(new int[]{ServerStatus.STARTING,
                         ServerStatus.LOADING, ServerStatus.PREPARING, ServerStatus.RESTARTING})) {
                     logger.log(Level.INFO, server.getAddress() + " is already online or starting!");
                     this.listenToStatus(server, null, findServerName(server.getAddress()), ServerStatus.ONLINE);
@@ -395,11 +407,8 @@ public class ExarotonPlugin extends Plugin {
      * @return server name e.g. lobby
      */
     public String findServerName(String address) {
-        Configuration servers = this.bungeeConfig.getSection("servers");
-        for (String serverName: servers.getKeys()) {
-            if (servers.getString(serverName + ".address").matches(Pattern.quote(address) + ":\\d+")) {
-                return serverName;
-            }
+        for (Map.Entry<String, String> entry: this.bungeeServers.entrySet()) {
+            if (entry.getValue().equals(address)) return entry.getKey();
         }
         return null;
     }
