@@ -52,7 +52,15 @@ public class Message {
      * @param name server name
      */
     public static Message added(String name) {
-        return new Message("Added server " + ChatColor.GREEN + name + ChatColor.GRAY + " to proxy.");
+        return new Message("Added server " + ChatColor.GREEN + name + ChatColor.GRAY + " to the proxy.");
+    }
+
+    /**
+     * show that a server has been removed from the proxy
+     * @param name server name
+     */
+    public static Message removed(String name) {
+        return new Message("Removed server " + ChatColor.GREEN + name + ChatColor.GRAY + " from the proxy. No longer watching status updates");
     }
 
     /**

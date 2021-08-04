@@ -329,26 +329,6 @@ public class ExarotonPlugin extends Plugin {
         return getAllNames(servers.toArray(Server[]::new));
     }
 
-    public Iterable<String> serverCompletionsInProxy(String query) {
-        List<String> result = new ArrayList<>();
-        List<Server> servers = new ArrayList<>();
-
-        try {
-            for (Map.Entry<String, String> entry : this.bungeeServers.entrySet()) {
-                Server server = findServer(entry.getValue(), false);
-                if (server != null) {
-                    result.add(entry.getValue());
-                    servers.add(server);
-                }
-            }
-        }
-        catch (APIException e) {
-            logger.log(Level.SEVERE, "Failed to access API", e);
-        }
-        result.addAll(getAllNames(findWithQuery(servers.stream(), query).toArray(Server[]::new)));
-        return result;
-    }
-
     /**
      * listen to server status
      * if there already is a status listener then add the sender and/or name
@@ -377,12 +357,24 @@ public class ExarotonPlugin extends Plugin {
                     .setName(name);
         }
         server.subscribe();
-        ServerStatusListener listener = new ServerStatusListener(this, restricted)
+        ServerStatusListener listener = new ServerStatusListener(this, restricted, server)
                 .setSender(sender, expectedStatus)
                 .setName(name);
         server.addStatusSubscriber(listener);
         statusListeners.put(server.getId(), listener);
         return listener;
+    }
+
+    /**
+     * stop listening to server status
+     * @param serverId ID of the server to unsubscribe from
+     */
+    public void stopListeningToStatus(String serverId) {
+        if (!this.statusListeners.containsKey(serverId)) {
+            return;
+        }
+        this.statusListeners.get(serverId).unsubscribe();
+        this.statusListeners.remove(serverId);
     }
 
     /**
