@@ -17,7 +17,7 @@ public class RemoveServer extends SubCommand {
      * @param plugin exaroton plugin
      */
     public RemoveServer(ExarotonPlugin plugin) {
-        super("remove", plugin);
+        super("remove", "Remove a server from the network and stop watching for updates.", plugin);
     }
 
     @Override

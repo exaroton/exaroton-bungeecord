@@ -18,7 +18,7 @@ public class AddServer extends SubCommand {
      * @param plugin exaroton plugin
      */
     public AddServer(ExarotonPlugin plugin) {
-        super("add", plugin);
+        super("add", "Add a server to the network if it's online and watch for updates.", plugin);
     }
 
     @Override

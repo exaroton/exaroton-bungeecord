@@ -86,7 +86,7 @@ public class ExarotonCommand extends Command implements TabExecutor {
      */
     private TextComponent getUsage() {
         return (subCommands.size() == 0 ? Message.error("No sub-commands registered.") :
-                Message.subCommandList(subCommands.keySet())).toComponent();
+                Message.subCommandList(subCommands.values())).toComponent();
     }
 
     @Override

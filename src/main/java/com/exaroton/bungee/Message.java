@@ -3,6 +3,8 @@ package com.exaroton.bungee;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.TextComponent;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 public class Message {
@@ -84,13 +86,15 @@ public class Message {
      * list sub-commands
      * @param subcommands sub-command names
      */
-    public static Message subCommandList(Set<String> subcommands) {
+    public static Message subCommandList(Collection<SubCommand> subcommands) {
         StringBuilder text = new StringBuilder(ChatColor.GRAY + "Available sub-commands:\n");
-        for (String subcommand: subcommands) {
+        for (SubCommand subcommand: subcommands) {
             text.append(ChatColor.GRAY)
                 .append("- ")
                 .append(ChatColor.GREEN)
-                .append(subcommand)
+                .append(subcommand.name)
+                .append(": ")
+                .append(subcommand.description)
                 .append("\n");
         }
         return new Message(text.subSequence(0, text.lastIndexOf("\n")).toString());

@@ -17,7 +17,7 @@ public class RestartServer extends SubCommand {
      * @param plugin exaroton plugin
      */
     public RestartServer(ExarotonPlugin plugin) {
-        super("restart", plugin);
+        super("restart", "Restart a server", plugin);
     }
 
     @Override

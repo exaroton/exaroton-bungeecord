@@ -17,7 +17,7 @@ public class StartServer extends SubCommand {
      * @param plugin exaroton plugin
      */
     public StartServer(ExarotonPlugin plugin) {
-        super("start", plugin);
+        super("start", "Start a server", plugin);
     }
 
     @Override

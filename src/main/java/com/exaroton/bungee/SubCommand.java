@@ -10,7 +10,12 @@ public abstract class SubCommand implements TabExecutor {
     /**
      * sub-command name
      */
-    private final String name;
+    public final String name;
+
+    /**
+     * command description
+     */
+    public final String description;
 
     /**
      * plugin
@@ -23,13 +28,21 @@ public abstract class SubCommand implements TabExecutor {
     protected final Logger logger;
 
     /**
+     * @param name sub-command name
+     * @param description sub-command description
      * @param plugin exaroton plugin
      */
-    public SubCommand(String name, ExarotonPlugin plugin){
+    public SubCommand(String name, String description,  ExarotonPlugin plugin){
         if (name == null || name.length() == 0) {
             throw new IllegalArgumentException("Invalid sub-command name!");
         }
         this.name = name;
+
+        if (description == null || description.length() == 0) {
+            throw new IllegalArgumentException("Invalid sub-command description!");
+        }
+        this.description = description;
+
         if (plugin == null) {
             throw new IllegalArgumentException("Invalid plugin!");
         }

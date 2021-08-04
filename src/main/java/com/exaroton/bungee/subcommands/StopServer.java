@@ -17,7 +17,7 @@ public class StopServer extends SubCommand {
      * @param plugin exaroton plugin
      */
     public StopServer(ExarotonPlugin plugin) {
-        super("stop", plugin);
+        super("stop", "Stop a server", plugin);
     }
 
     @Override
