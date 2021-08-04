@@ -42,6 +42,9 @@ public class RestartServer extends SubCommand {
             ServerStatusListener listener = plugin.listenToStatus(server, sender, plugin.findServerName(server.getAddress()), ServerStatus.ONLINE);
             server.restart();
             sender.sendMessage(Message.action("Restarting", listener.getName(server)).toComponent());
+            if (!sender.equals(plugin.getProxy().getConsole())) {
+                logger.info(sender.getName() + " is restarting " + listener.getName(server));
+            }
         } catch (APIException e) {
             logger.log(Level.SEVERE, "An API Error occurred!", e);
             sender.sendMessage(Message.API_ERROR);

@@ -37,9 +37,11 @@ public class RemoveServer extends SubCommand {
 
             Server server = plugin.findServer(name, false);
             plugin.stopListeningToStatus(server.getId());
-            sender.sendMessage(Message.removed(name).toComponent());
-
             plugin.getProxy().getServers().remove(name);
+            sender.sendMessage(Message.removed(name).toComponent());
+            if (!sender.equals(plugin.getProxy().getConsole())) {
+                logger.info(sender.getName() + " removed " + name + " from the proxy.");
+            }
         } catch (APIException e) {
             logger.log(Level.SEVERE, "An API Error occurred!", e);
             sender.sendMessage(Message.API_ERROR);

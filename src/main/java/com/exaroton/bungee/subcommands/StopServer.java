@@ -42,6 +42,9 @@ public class StopServer extends SubCommand {
             ServerStatusListener listener = plugin.listenToStatus(server, sender, plugin.findServerName(server.getAddress()), ServerStatus.OFFLINE);
             server.stop();
             sender.sendMessage(Message.action("Stopping", listener.getName(server)).toComponent());
+            if (!sender.equals(plugin.getProxy().getConsole())) {
+                logger.info(sender.getName() + " is stopping " + listener.getName(server));
+            }
         } catch (APIException e) {
             logger.log(Level.SEVERE, "An API Error occurred!", e);
             sender.sendMessage(Message.API_ERROR);

@@ -46,6 +46,9 @@ public class AddServer extends SubCommand {
                 else {
                     plugin.getProxy().getServers().put(name, plugin.constructServerInfo(name, server, false));
                     sender.sendMessage(Message.added(name).toComponent());
+                    if (!sender.equals(plugin.getProxy().getConsole())) {
+                        logger.info(sender.getName() + " is adding " + name + " to the proxy.");
+                    }
                 }
             }
         } catch (APIException e) {
