@@ -314,6 +314,11 @@ public class ExarotonPlugin extends Plugin {
     public void watchServer(String name, String address, boolean restricted) {
         try {
             Server server = this.findServer(address, false);
+            if (server == null) {
+                logger.warning("Can't find server " + address + ". Unable to watch status changes");
+                return;
+            }
+            logger.info("Found exaroton server: " + address + ". Starting to watch status changes");
             if (server.hasStatus(ServerStatus.ONLINE)) {
                 logger.info("Updating server address and port for " + name + "...");
                 this.getProxy().getServers().remove(name);
