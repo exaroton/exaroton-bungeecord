@@ -21,8 +21,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ExarotonPlugin extends Plugin {
 
@@ -55,7 +55,7 @@ public class ExarotonPlugin extends Plugin {
      * exaroton servers from bungee config
      * name -> address
      */
-    private Map<String, String> bungeeServers = new HashMap<>();
+    private final Map<String, String> bungeeServers = new HashMap<>();
 
     /**
      * server status listeners
@@ -112,8 +112,8 @@ public class ExarotonPlugin extends Plugin {
         this.bungeeConfig = ConfigurationProvider.getProvider(YamlConfiguration.class)
                 .load(new File(getProxy().getPluginsFolder().getParent(), "config.yml"));
         Configuration servers = bungeeConfig.getSection("servers");
-        for (String name: servers.getKeys()) {
-            String address = servers.getString(name+".address");
+        for (String name : servers.getKeys()) {
+            String address = servers.getString(name + ".address");
             if (address.matches(".*\\.exaroton\\.me(:\\d+)?")) {
                 this.bungeeServers.put(name, address.replaceAll(":\\d+", ""));
             }
@@ -122,12 +122,12 @@ public class ExarotonPlugin extends Plugin {
 
     /**
      * update config recursively
-     * @param config current configuration
+     * @param config   current configuration
      * @param defaults defaults
      * @return config with defaults
      */
     private Configuration addDefaults(Configuration config, Configuration defaults) {
-        for (String key: defaults.getKeys()) {
+        for (String key : defaults.getKeys()) {
             Object value = defaults.get(key);
 
             if (value instanceof Configuration) {
@@ -166,8 +166,8 @@ public class ExarotonPlugin extends Plugin {
 
     /**
      * update server cache to provided servers
-     * @throws APIException API exceptions
      * @return exaroton servers
+     * @throws APIException API exceptions
      */
     public Server[] fetchServers() throws APIException {
         this.getProxy().getScheduler().schedule(this, () -> this.serverCache = null, 1, TimeUnit.MINUTES);
@@ -188,7 +188,7 @@ public class ExarotonPlugin extends Plugin {
         }
         final String finalQuery = query;
 
-        Server[] servers = serverCache != null && !force ? serverCache : fetchServers();
+        Server[] servers = force ? fetchServers() : getServerCache();
 
         servers = Arrays.stream(servers)
                 .filter(server -> matchExact(server, finalQuery))
@@ -210,7 +210,7 @@ public class ExarotonPlugin extends Plugin {
     /**
      * does this server match the query exactly
      * @param server exaroton server
-     * @param query server name, address or id
+     * @param query  server name, address or id
      * @return does the server match exactly
      */
     public boolean matchExact(Server server, String query) {
@@ -220,7 +220,7 @@ public class ExarotonPlugin extends Plugin {
     /**
      * does this server start with the query
      * @param server exaroton server
-     * @param query partial server name, address or id
+     * @param query  partial server name, address or id
      * @return does the server start with the query
      */
     public boolean matchBeginning(Server server, String query) {
@@ -228,43 +228,133 @@ public class ExarotonPlugin extends Plugin {
     }
 
     /**
-     * find auto completions by a query and status
-     * @param query partial server name, address or ID
-     * @param status server status (-1 => any)
-     * @return all matching server names, addresses and IDs
+     * @return get server cache (request if necessary)
      */
-    public Iterable<String> serverCompletions(String query, int status) {
+    public Server[] getServerCache() throws APIException {
         if (serverCache == null) {
-            try {
-                this.fetchServers();
-            } catch (APIException e) {
-                logger.log(Level.SEVERE, "Failed to load completions", e);
-                return new ArrayList<>();
-            }
+            this.fetchServers();
         }
-        Server[] matching = Arrays.stream(serverCache).filter(server -> matchBeginning(server, query) &&
-                (status == -1 || server.hasStatus(status))).toArray(Server[]::new);
-        List<String> result = this.bungeeServers.keySet().stream().filter(s -> s.startsWith(query)).collect(Collectors.toList());
+        return serverCache;
+    }
 
-        for (Server server: matching) {
+    /**
+     * @param servers server list
+     * @param status status code
+     * @return severs that have the requested status
+     */
+    public Stream<Server> findWithStatus(Stream<Server> servers, int status) {
+        return servers.filter(server -> server.hasStatus(status));
+    }
+
+    /**
+     * @param servers list of server names
+     * @param status status code
+     * @return server names that have the requested status
+     */
+    public Stream<String> findWithStatusByName(Stream<String> servers, int status) {
+        return servers.filter(server -> {
+            try {
+                return this.findServer(server, false).hasStatus(status);
+            } catch (APIException e) {
+                logger.log(Level.SEVERE, "Failed to request API", e);
+                return true;
+            }
+        });
+    }
+
+    public Stream<Server> findWithQuery(Stream<Server> servers, String query) {
+        return servers.filter(server -> matchBeginning(server, query));
+    }
+
+    public List<String> getAllNames(Server[] servers) {
+        List<String> result = new ArrayList<>();
+
+        for (Server server : servers) {
             result.add(server.getName());
         }
-        for (Server server: matching) {
+        for (Server server : servers) {
             result.add(server.getAddress());
         }
-        for (Server server: matching) {
+        for (Server server : servers) {
             result.add(server.getId());
         }
 
         return result;
     }
 
+    public Stream<String> getBungeeServers() {
+        return this.bungeeServers.keySet().stream();
+    }
+
+    /**
+     * find auto completions by a query and status
+     * @param query partial server name, address or ID
+     * @param status server status
+     * @return all matching server names, addresses and IDs
+     */
+    public Iterable<String> serverCompletions(String query, int status) {
+        Stream<Server> servers;
+        try {
+            servers = Arrays.stream(getServerCache());
+        } catch (APIException exception) {
+            logger.log(Level.SEVERE, "Failed to access API", exception);
+            return new ArrayList<>();
+        }
+        servers = findWithStatus(servers, status);
+        servers = findWithQuery(servers, query);
+        Server[] matching = servers.toArray(Server[]::new);
+
+        Stream<String> bungeeServers = getBungeeServers()
+                .filter(s -> s.startsWith(query));
+
+        bungeeServers = findWithStatusByName(bungeeServers, status);
+
+        List<String> result = bungeeServers.collect(Collectors.toList());
+        result.addAll(getAllNames(matching));
+
+        return result;
+    }
+
+    public Iterable<String> serverCompletionsNotInProxy(String query) {
+        Stream<Server> servers;
+        try {
+            servers = Arrays.stream(getServerCache());
+        } catch (APIException exception) {
+            logger.log(Level.SEVERE, "Failed to access API", exception);
+            return new ArrayList<>();
+        }
+        servers = findWithQuery(servers, query);
+        servers = servers.filter(s -> this.bungeeServers.values().stream().noneMatch(address ->  s.getAddress().equals(address)));
+
+        return getAllNames(servers.toArray(Server[]::new));
+    }
+
+    public Iterable<String> serverCompletionsInProxy(String query) {
+        List<String> result = new ArrayList<>();
+        List<Server> servers = new ArrayList<>();
+
+        try {
+            for (Map.Entry<String, String> entry : this.bungeeServers.entrySet()) {
+                Server server = findServer(entry.getValue(), false);
+                if (server != null) {
+                    result.add(entry.getValue());
+                    servers.add(server);
+                }
+            }
+        }
+        catch (APIException e) {
+            logger.log(Level.SEVERE, "Failed to access API", e);
+        }
+        result.addAll(getAllNames(findWithQuery(servers.stream(), query).toArray(Server[]::new)));
+        return result;
+    }
+
     /**
      * listen to server status
      * if there already is a status listener then add the sender and/or name
-     * @param server server to subscribe to
-     * @param sender command sender to update
-     * @param name server name in bungee server list
+     * @param server         server to subscribe to
+     * @param sender         command sender to update
+     * @param name           server name in bungee server list
      * @param expectedStatus status user is waiting for
      */
     public ServerStatusListener listenToStatus(Server server, CommandSender sender, String name, int expectedStatus) {
@@ -274,11 +364,11 @@ public class ExarotonPlugin extends Plugin {
     /**
      * listen to server status
      * if there already is a status listener then add the sender and/or name
-     * @param server server to subscribe to
-     * @param sender command sender to update
-     * @param name server name in bungee server list
+     * @param server         server to subscribe to
+     * @param sender         command sender to update
+     * @param name           server name in bungee server list
      * @param expectedStatus status user is waiting for
-     * @param restricted is server restricted
+     * @param restricted     is server restricted
      */
     public ServerStatusListener listenToStatus(Server server, CommandSender sender, String name, int expectedStatus, boolean restricted) {
         if (statusListeners.containsKey(server.getId())) {
@@ -308,8 +398,8 @@ public class ExarotonPlugin extends Plugin {
 
     /**
      * watch this server
-     * @param name server name (lobby)
-     * @param address server address (example.exaroton.me)
+     * @param name       server name (lobby)
+     * @param address    server address (example.exaroton.me)
      * @param restricted is server restricted
      */
     public void watchServer(String name, String address, boolean restricted) {
@@ -328,9 +418,9 @@ public class ExarotonPlugin extends Plugin {
                 this.getProxy().getServers().remove(name);
                 logger.info("Server " + name + " is offline, removed it from the server list!");
             }
-            this.listenToStatus(server, null, name, -1 , restricted);
+            this.listenToStatus(server, null, name, -1, restricted);
         } catch (APIException e) {
-            logger.log(Level.SEVERE, "Failed to access API, not watching "+name);
+            logger.log(Level.SEVERE, "Failed to access API, not watching " + name);
         }
     }
 
@@ -340,18 +430,18 @@ public class ExarotonPlugin extends Plugin {
     public void watchServers() {
         if (!config.getBoolean("watch-servers", false)) return;
         Configuration servers = bungeeConfig.getSection("servers");
-        for (String name: servers.getKeys()) {
-            String address = servers.getString(name+".address");
+        for (String name : servers.getKeys()) {
+            String address = servers.getString(name + ".address");
             if (address.matches(".*\\.exaroton\\.me(:\\d+)?")) {
-                this.watchServer(name, address, servers.getBoolean(name+".restricted", false));
+                this.watchServer(name, address, servers.getBoolean(name + ".restricted", false));
             }
         }
     }
 
     /**
      * generate server info
-     * @param name server name in network
-     * @param server server
+     * @param name       server name in network
+     * @param server     server
      * @param restricted restricted
      * @return bungee server info
      */
@@ -364,7 +454,7 @@ public class ExarotonPlugin extends Plugin {
      */
     public void autoStartServers() {
         if (!config.getBoolean("auto-start.enabled")) return;
-        for (String query: config.getStringList("auto-start.servers")) {
+        for (String query : config.getStringList("auto-start.servers")) {
             try {
                 Server server = this.findServer(query, false);
 
@@ -402,7 +492,7 @@ public class ExarotonPlugin extends Plugin {
                 server.start();
 
             } catch (APIException e) {
-                logger.log(Level.SEVERE, "Failed to start start "+ query +"!", e);
+                logger.log(Level.SEVERE, "Failed to start start " + query + "!", e);
             }
         }
     }
@@ -413,7 +503,7 @@ public class ExarotonPlugin extends Plugin {
      * @return server name e.g. lobby
      */
     public String findServerName(String address) {
-        for (Map.Entry<String, String> entry: this.bungeeServers.entrySet()) {
+        for (Map.Entry<String, String> entry : this.bungeeServers.entrySet()) {
             if (entry.getValue().equals(address)) return entry.getKey();
         }
         return null;
