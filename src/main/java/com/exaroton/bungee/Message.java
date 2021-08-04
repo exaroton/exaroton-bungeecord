@@ -44,7 +44,23 @@ public class Message {
      * @param name server name
      */
     public static Message action(String action, String name) {
-        return new Message(action + " server " + ChatColor.GREEN + name + ChatColor.GRAY + "...");
+        return new Message(action + " server " + ChatColor.GREEN + name + ChatColor.GRAY + ".");
+    }
+
+    /**
+     * show that a server has been added to the proxy
+     * @param name server name
+     */
+    public static Message added(String name) {
+        return new Message("Added server " + ChatColor.GREEN + name + ChatColor.GRAY + " to proxy.");
+    }
+
+    /**
+     * show that a server's status is being watched
+     * @param name server name
+     */
+    public static Message watching(String name) {
+        return new Message("Watching status updates for " + ChatColor.GREEN + name + ChatColor.GRAY + ".");
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.exaroton.bungee;
 
+import com.exaroton.bungee.subcommands.AddServer;
 import com.exaroton.bungee.subcommands.RestartServer;
 import com.exaroton.bungee.subcommands.StartServer;
 import com.exaroton.bungee.subcommands.StopServer;
@@ -49,6 +50,7 @@ public class ExarotonCommand extends Command implements TabExecutor {
         this.registerCommand(new StartServer(plugin));
         this.registerCommand(new StopServer(plugin));
         this.registerCommand(new RestartServer(plugin));
+        this.registerCommand(new AddServer(plugin));
     }
 
     /**

@@ -230,7 +230,7 @@ public class ExarotonPlugin extends Plugin {
     /**
      * find auto completions by a query and status
      * @param query partial server name, address or ID
-     * @param status server status
+     * @param status server status (-1 => any)
      * @return all matching server names, addresses and IDs
      */
     public Iterable<String> serverCompletions(String query, int status) {
@@ -242,7 +242,8 @@ public class ExarotonPlugin extends Plugin {
                 return new ArrayList<>();
             }
         }
-        Server[] matching = Arrays.stream(serverCache).filter(server -> matchBeginning(server, query) && server.hasStatus(status)).toArray(Server[]::new);
+        Server[] matching = Arrays.stream(serverCache).filter(server -> matchBeginning(server, query) &&
+                (status == -1 || server.hasStatus(status))).toArray(Server[]::new);
         List<String> result = this.bungeeServers.keySet().stream().filter(s -> s.startsWith(query)).collect(Collectors.toList());
 
         for (Server server: matching) {
