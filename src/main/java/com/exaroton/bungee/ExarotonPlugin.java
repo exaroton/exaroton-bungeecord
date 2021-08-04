@@ -372,13 +372,13 @@ public class ExarotonPlugin extends Plugin {
                     continue;
                 }
 
+                String name = findServerName(server.getAddress());
                 if (server.hasStatus(ServerStatus.ONLINE)) {
-                    String name = findServerName(server.getAddress());
                     if (name == null) {
                         logger.log(Level.INFO, server.getAddress() + " is already online, adding it to proxy!");
                         this.getProxy().getServers().put(server.getName(), this.constructServerInfo(server.getName(), server, false));
                     } else {
-                        logger.log(Level.INFO, server.getAddress() + " is already online!");
+                        logger.log(Level.INFO, name + " is already online!");
                     }
                     this.listenToStatus(server, null, name, -1);
                     return;
@@ -386,18 +386,18 @@ public class ExarotonPlugin extends Plugin {
 
                 if (server.hasStatus(new int[]{ServerStatus.STARTING,
                         ServerStatus.LOADING, ServerStatus.PREPARING, ServerStatus.RESTARTING})) {
-                    logger.log(Level.INFO, server.getAddress() + " is already online or starting!");
-                    this.listenToStatus(server, null, findServerName(server.getAddress()), ServerStatus.ONLINE);
+                    logger.log(Level.INFO, name + " is already online or starting!");
+                    this.listenToStatus(server, null, name, ServerStatus.ONLINE);
                     return;
                 }
 
                 if (!server.hasStatus(new int[]{ServerStatus.OFFLINE, ServerStatus.CRASHED})) {
-                    logger.log(Level.SEVERE, "Can't start " + server.getAddress() + ": Server isn't offline.");
+                    logger.log(Level.SEVERE, "Can't start " + name + ": Server isn't offline.");
                     continue;
                 }
 
-                logger.log(Level.INFO, "Starting "+ server.getAddress());
-                this.listenToStatus(server, null, findServerName(server.getAddress()), ServerStatus.ONLINE);
+                logger.log(Level.INFO, "Starting " + name);
+                this.listenToStatus(server, null, name, ServerStatus.ONLINE);
                 server.start();
 
             } catch (APIException e) {
