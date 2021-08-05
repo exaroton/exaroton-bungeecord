@@ -62,7 +62,7 @@ public class Message {
      * @param name server name
      */
     public static Message removed(String name) {
-        return new Message("Removed server " + ChatColor.GREEN + name + ChatColor.GRAY + " from the proxy. No longer watching status updates");
+        return new Message("Removed server " + ChatColor.GREEN + name + ChatColor.GRAY + " from the proxy. No longer watching status updates.");
     }
 
     /**
@@ -84,7 +84,7 @@ public class Message {
 
     /**
      * list sub-commands
-     * @param subcommands sub-command names
+     * @param subcommands sub-commands
      */
     public static Message subCommandList(Collection<SubCommand> subcommands) {
         StringBuilder text = new StringBuilder(ChatColor.GRAY + "Available sub-commands:\n");
@@ -94,6 +94,7 @@ public class Message {
                 .append(ChatColor.GREEN)
                 .append(subcommand.name)
                 .append(": ")
+                .append(ChatColor.GRAY)
                 .append(subcommand.description)
                 .append("\n");
         }

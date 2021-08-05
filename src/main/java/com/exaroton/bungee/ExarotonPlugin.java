@@ -324,7 +324,10 @@ public class ExarotonPlugin extends Plugin {
             return new ArrayList<>();
         }
         servers = findWithQuery(servers, query);
-        servers = servers.filter(s -> this.bungeeServers.values().stream().noneMatch(address ->  s.getAddress().equals(address)));
+        servers = servers.filter(s -> {
+            String name = findServerName(s.getAddress());
+            return !this.getProxy().getServers().containsKey(name == null ? s.getName() : name);
+        });
 
         return getAllNames(servers.toArray(Server[]::new));
     }
