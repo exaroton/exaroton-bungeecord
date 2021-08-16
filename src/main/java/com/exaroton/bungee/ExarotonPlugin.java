@@ -524,14 +524,6 @@ public class ExarotonPlugin extends Plugin {
         return fallback;
     }
 
-    /**
-     * get bungeecord configuration
-     * @return bungee config
-     */
-    private Configuration getBungeeConfig() {
-        return this.bungeeConfig;
-    }
-
     public void updateServer(Server server) {
         if (serverCache == null) return;
         int index = 0;
