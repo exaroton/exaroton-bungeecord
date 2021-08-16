@@ -445,7 +445,7 @@ public class ExarotonPlugin extends Plugin {
     }
 
     /**
-     * automatically start servers from the config (asynchronous)
+     * automatically start servers from the config
      */
     public void autoStartServers() {
         if (!config.getBoolean("auto-start.enabled")) return;
@@ -467,14 +467,14 @@ public class ExarotonPlugin extends Plugin {
                         logger.log(Level.INFO, name + " is already online!");
                     }
                     this.listenToStatus(server, null, name, -1);
-                    return;
+                    continue;
                 }
 
                 if (server.hasStatus(new int[]{ServerStatus.STARTING,
                         ServerStatus.LOADING, ServerStatus.PREPARING, ServerStatus.RESTARTING})) {
                     logger.log(Level.INFO, name + " is already online or starting!");
                     this.listenToStatus(server, null, name, ServerStatus.ONLINE);
-                    return;
+                    continue;
                 }
 
                 if (!server.hasStatus(new int[]{ServerStatus.OFFLINE, ServerStatus.CRASHED})) {
@@ -487,7 +487,7 @@ public class ExarotonPlugin extends Plugin {
                 server.start();
 
             } catch (APIException e) {
-                logger.log(Level.SEVERE, "Failed to start start " + query + "!", e);
+                logger.log(Level.SEVERE, "Failed to start " + query + "!", e);
             }
         }
     }
