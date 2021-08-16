@@ -18,6 +18,9 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -76,6 +79,13 @@ public class ExarotonPlugin extends Plugin {
         if (this.createExarotonClient()) {
             this.registerCommands();
             this.runAsyncTasks();
+        }
+    }
+
+    @Override
+    public void onDisable() {
+        if (this.exarotonClient != null) {
+            this.autoStopServers();
         }
     }
 
@@ -458,7 +468,7 @@ public class ExarotonPlugin extends Plugin {
                     continue;
                 }
 
-                String name = findServerName(server.getAddress());
+                String name = findServerName(server.getAddress(), server.getName());
                 if (server.hasStatus(ServerStatus.ONLINE)) {
                     if (name == null) {
                         logger.log(Level.INFO, server.getAddress() + " is already online, adding it to proxy!");
@@ -505,6 +515,19 @@ public class ExarotonPlugin extends Plugin {
     }
 
     /**
+     * try to find this server in the bungee config
+     * @param address exaroton address e.g. example.exaroton.me
+     * @param fallback fallback name e.g. example
+     * @return server name e.g. lobby
+     */
+    public String findServerName(String address, String fallback) {
+        for (Map.Entry<String, String> entry : this.bungeeServers.entrySet()) {
+            if (entry.getValue().equals(address)) return entry.getKey();
+        }
+        return fallback;
+    }
+
+    /**
      * get bungeecord configuration
      * @return bungee config
      */
@@ -521,5 +544,62 @@ public class ExarotonPlugin extends Plugin {
         if (index < serverCache.length) {
             serverCache[index] = server;
         }
+    }
+
+    /**
+     * automatically stop servers from the config
+     */
+    public void autoStopServers() {
+        if (!config.getBoolean("auto-stop.enabled")) return;
+
+        ExecutorService executor = Executors.newCachedThreadPool();
+        ArrayList<Callable<Object>> stopping = new ArrayList<>();
+
+        for (String query : config.getStringList("auto-stop.servers")) {
+            try {
+                Server server = this.findServer(query, false);
+
+                if (server == null) {
+                    logger.log(Level.WARNING, "Can't stop " + query + ": Server not found");
+                    continue;
+                }
+
+                String name = findServerName(server.getAddress(), server.getName());
+                if (server.hasStatus(new int[]{ServerStatus.OFFLINE, ServerStatus.CRASHED})) {
+                    logger.log(Level.INFO, name + " is already offline!");
+                    continue;
+                }
+
+                if (server.hasStatus(new int[]{ServerStatus.SAVING, ServerStatus.STOPPING})) {
+                    logger.log(Level.INFO, name + " is already stopping!");
+                    continue;
+                }
+
+                if (!server.hasStatus(ServerStatus.ONLINE)) {
+                    logger.log(Level.SEVERE, "Can't stop " + name + ": Server isn't online.");
+                    continue;
+                }
+
+                logger.log(Level.INFO, "Stopping " + name);
+                stopping.add(() -> {
+                    server.stop();
+                    return null;
+                });
+            } catch (APIException e) {
+                logger.log(Level.SEVERE, "Failed to stop " + query + "!", e);
+            }
+        }
+        if (stopping.size() == 0)
+            return;
+
+        try {
+            executor.invokeAll(stopping);
+        } catch (InterruptedException e) {
+            logger.log(Level.SEVERE, "Failed to stop servers", e);
+            return;
+        }
+
+        int count = stopping.size();
+        logger.info("Successfully stopped " + count + " server" + (count == 1 ? "" : "s") + "!");
     }
 }
