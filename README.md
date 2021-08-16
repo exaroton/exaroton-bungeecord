@@ -34,3 +34,8 @@ This can be disabled in the config.
 Automatically start exaroton servers defined in the plugin config 
 when the proxy starts and add them to the network.
 This can be enabled in the config.
+
+### Autostop
+Automatically stop exaroton servers defined in the plugin config
+when the proxy shuts down.
+This can be enabled in the config.
