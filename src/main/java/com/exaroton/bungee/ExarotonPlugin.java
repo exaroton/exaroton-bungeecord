@@ -335,8 +335,8 @@ public class ExarotonPlugin extends Plugin {
         }
         servers = findWithQuery(servers, query);
         servers = servers.filter(s -> {
-            String name = findServerName(s.getAddress());
-            return !this.getProxy().getServers().containsKey(name == null ? s.getName() : name);
+            String name = findServerName(s.getAddress(), s.getName());
+            return !this.getProxy().getServers().containsKey(name);
         });
 
         return getAllNames(servers.toArray(Server[]::new));
@@ -508,10 +508,7 @@ public class ExarotonPlugin extends Plugin {
      * @return server name e.g. lobby
      */
     public String findServerName(String address) {
-        for (Map.Entry<String, String> entry : this.bungeeServers.entrySet()) {
-            if (entry.getValue().equals(address)) return entry.getKey();
-        }
-        return null;
+        return findServerName(address, null);
     }
 
     /**
