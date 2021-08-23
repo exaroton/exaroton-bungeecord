@@ -79,6 +79,7 @@ public class ExarotonPlugin extends Plugin {
         if (this.createExarotonClient()) {
             this.registerCommands();
             this.runAsyncTasks();
+            ExarotonPluginAPI.setPlugin(this);
         }
     }
 
@@ -340,6 +341,16 @@ public class ExarotonPlugin extends Plugin {
         });
 
         return getAllNames(servers.toArray(Server[]::new));
+    }
+
+    /**
+     * listen to server status
+     * if there already is a status listener then add the sender and/or name
+     * @param server         server to subscribe to
+     * @param name           server name in bungee server list
+     */
+    public ServerStatusListener listenToStatus(Server server, String name) {
+        return this.listenToStatus(server, null, name, -1, false);
     }
 
     /**
