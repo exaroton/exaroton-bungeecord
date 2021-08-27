@@ -18,7 +18,7 @@ public class ExarotonPluginAPI {
      * @return found server
      * @throws APIException exception while fetching server list
      */
-    static Server findServer(String query) throws APIException {
+    public static Server findServer(String query) throws APIException {
         return plugin.findServer(query, true);
     }
 
@@ -28,7 +28,7 @@ public class ExarotonPluginAPI {
      * @return started successfully
      * @throws APIException exception while starting server
      */
-    static boolean startServer(Server server, boolean watch) throws APIException {
+    public static boolean startServer(Server server) throws APIException {
         if (server == null) {
             throw new NullPointerException("No server provided!");
         }
@@ -49,7 +49,7 @@ public class ExarotonPluginAPI {
      * @return stopped successfully
      * @throws APIException exception while stopping server
      */
-    static boolean stopServer(Server server) throws APIException {
+    public static boolean stopServer(Server server) throws APIException {
         if (server == null) {
             throw new NullPointerException("No server provided!");
         }
@@ -69,7 +69,7 @@ public class ExarotonPluginAPI {
      * @return restarted successfully
      * @throws APIException exception while restarting server
      */
-    static boolean restartServer(Server server) throws APIException {
+    public static boolean restartServer(Server server) throws APIException {
         if (server == null) {
             throw new NullPointerException("No server provided!");
         }
@@ -88,7 +88,7 @@ public class ExarotonPluginAPI {
      * @param server server to add
      * @return was it added
      */
-    static boolean addServer(Server server) {
+    public static boolean addServer(Server server) {
         if (server == null) {
             throw new NullPointerException("No server provided!");
         }
@@ -126,7 +126,7 @@ public class ExarotonPluginAPI {
      * stop watching updates for this server
      * @param server server
      */
-    static void stopWatchingServer(Server server) {
+    public static void stopWatchingServer(Server server) {
         if (server == null) {
             throw new NullPointerException("No server provided!");
         }
@@ -134,7 +134,7 @@ public class ExarotonPluginAPI {
         plugin.stopListeningToStatus(server.getId());
     }
 
-    public static void setPlugin(ExarotonPlugin plugin) {
+    static void setPlugin(ExarotonPlugin plugin) {
         ExarotonPluginAPI.plugin = plugin;
     }
 }
