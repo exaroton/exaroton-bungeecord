@@ -1,9 +1,11 @@
 plugins {
-    id 'java'
+    id 'java-library'
     id 'com.github.johnrengelman.shadow' version '7.0.0'
+    id 'maven-publish'
+    id 'signing'
 }
 
-group 'com.exaroton.bungee'
+group 'com.exaroton'
 version '1.3.0'
 
 repositories {
@@ -16,6 +18,64 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
     implementation 'com.exaroton:api:1.3.1'
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+
+publishing {
+    repositories {
+        maven {
+            def releaseRepo = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshotRepo = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+            url = isReleaseVersion ? releaseRepo : snapshotRepo
+            credentials {
+                username = project.hasProperty('ossrhUsername') ? ossrhUsername : "Unknown user"
+                password = project.hasProperty('ossrhPassword') ? ossrhPassword : "Unknown password"
+            }
+        }
+    }
+
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifactId = 'bungee'
+            pom {
+                name = 'exaroton Bungee API'
+                description = 'The official exaroton bungee plugin to manage exaroton servers in your proxy'
+                url = 'https://github.com/exaroton/exaroton-bungeecord'
+                licenses {
+                    license {
+                        name = 'MIT'
+                        url = 'https://github.com/exaroton/exaroton-bungeecord/blob/master/LICENSE'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'julian'
+                        name = 'Julian Vennen'
+                        email = 'julian@aternos.org'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/exaroton/exaroton-bungeecord.git'
+                    developerConnection = 'scm:git:git@github.com:exaroton/exaroton-bungeecord.git'
+                    url = 'https://github.com/exaroton/exaroton-bungeecord'
+                }
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
+}
+tasks.withType(Sign) {
+    onlyIf { isReleaseVersion }
 }
 
 shadowJar {
