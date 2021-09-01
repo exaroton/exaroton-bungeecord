@@ -6,7 +6,7 @@ plugins {
 }
 
 group 'com.exaroton'
-version '1.3.0'
+version '1.4.0'
 
 repositories {
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
@@ -15,8 +15,8 @@ repositories {
 
 dependencies {
     shadow group: 'net.md-5', name: 'bungeecord-api', version: '1.16-R0.5-SNAPSHOT'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
     implementation 'com.exaroton:api:1.3.1'
 }
 
@@ -82,7 +82,7 @@ shadowJar {
     archiveClassifier.set('')
 }
 
-task copyPlugin {
+tasks.register('copyPlugin') {
     exec {
         executable "cp"
         args = [
@@ -91,5 +91,3 @@ task copyPlugin {
         ]
     }
 }
-
-shadowJar.finalizedBy("copyPlugin")
