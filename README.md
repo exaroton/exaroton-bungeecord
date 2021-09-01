@@ -39,3 +39,11 @@ This can be enabled in the config.
 Automatically stop exaroton servers defined in the plugin config
 when the proxy shuts down.
 This can be enabled in the config.
+
+## Plugin API
+You can call any actions in this plugin from your own BungeeCord plugin using the ExarotonPluginAPI class.
+
+Adding it to your gradle project:
+```
+implementation 'com.exaroton:bungee:1.4.0'
+```
