@@ -3,6 +3,13 @@ package com.exaroton.bungee;
 import com.exaroton.api.APIException;
 import com.exaroton.api.server.Server;
 import com.exaroton.api.server.ServerStatus;
+import net.md_5.bungee.api.config.ServerInfo;
+import net.md_5.bungee.api.connection.ProxiedPlayer;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 public class ExarotonPluginAPI {
 
@@ -132,6 +139,45 @@ public class ExarotonPluginAPI {
         }
 
         plugin.stopListeningToStatus(server.getId());
+    }
+
+    /**
+     * send this player to this server
+     * start the server or add it to the network if necessary
+     * @param player player to move
+     * @param server server to move to
+     * @throws APIException exception starting the server
+     * @throws InterruptedException interrupted while
+     */
+    public static void switchServer(ProxiedPlayer player, Server server) throws APIException, InterruptedException {
+        if (server == null) {
+            throw new NullPointerException("No server provided!");
+        }
+
+        if (server.hasStatus(new int[]{ServerStatus.OFFLINE, ServerStatus.CRASHED, ServerStatus.LOADING, ServerStatus.STARTING, ServerStatus.PREPARING})) {
+            ServerStatusListener listener = watchServer(server);
+            if (server.hasStatus(new int[]{ServerStatus.OFFLINE, ServerStatus.CRASHED})) {
+                server.start();
+            }
+            try {
+                server = listener.waitForStatus(ServerStatus.ONLINE).get();
+            } catch (ExecutionException e) {
+                throw new RuntimeException("Failed to start server", e);
+            }
+        }
+
+        movePlayer(player, server);
+    }
+
+    private static void movePlayer(ProxiedPlayer player, Server server) {
+        String name = plugin.findServerName(server.getAddress(), server.getName());
+        Map<String, ServerInfo> servers = plugin.getProxy().getServers();
+
+        // add to proxy if needed
+        if (!servers.containsKey(name)) {
+            servers.put(name, plugin.constructServerInfo(name, server, false));
+        }
+        player.connect(servers.get(name));
     }
 
     static void setPlugin(ExarotonPlugin plugin) {

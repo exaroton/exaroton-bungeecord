@@ -8,6 +8,11 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -53,6 +58,8 @@ public class ServerStatusListener extends ServerStatusSubscriber {
      */
     private final Server server;
 
+    private final Map<Integer, List<CompletableFuture<Server>>> waitingFor = new HashMap<>();
+
     public ServerStatusListener(ExarotonPlugin plugin, boolean restricted, Server server) {
         this.proxy = plugin.getProxy();
         this.logger = plugin.getLogger();
@@ -83,6 +90,13 @@ public class ServerStatusListener extends ServerStatusSubscriber {
     @Override
     public void statusUpdate(Server oldServer, Server newServer) {
         plugin.updateServer(newServer);
+
+        if (waitingFor.containsKey(newServer.getStatus())) {
+            for (CompletableFuture<Server> future: waitingFor.get(newServer.getStatus())) {
+                future.complete(newServer);
+            }
+        }
+
         String serverName = this.name == null ? newServer.getName() : this.name;
         if (!oldServer.hasStatus(ServerStatus.ONLINE) && newServer.hasStatus(ServerStatus.ONLINE)) {
             if (proxy.getServers().containsKey(serverName)) {
@@ -119,5 +133,19 @@ public class ServerStatusListener extends ServerStatusSubscriber {
      */
     public void unsubscribe() {
         this.server.unsubscribe();
+    }
+
+    /**
+     * wait until this server has reached this status
+     * @param status expected status
+     * @return server with status
+     */
+    public CompletableFuture<Server> waitForStatus(int status) {
+        CompletableFuture<Server> future = new CompletableFuture<>();
+        if (!waitingFor.containsKey(status)) {
+            waitingFor.put(status, new ArrayList<>());
+        }
+        waitingFor.get(status).add(future);
+        return future;
     }
 }
