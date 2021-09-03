@@ -22,6 +22,11 @@ it use `/exaroton remove`.
 The commands require the permission nodes `exaroton.<subcommand>` e.g.
 `exaroton.stop`.
 
+### Switch command
+Users can switch to any server using `/exaroton switch <server>`.
+If the server is offline it will be started before they are moved, if it's not in the network it will be added.
+The command only requires the permission `exaroton.switch` 
+
 
 ### Watch servers
 Automatically remove offline servers specified in the bungee config

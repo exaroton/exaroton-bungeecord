@@ -56,6 +56,6 @@ public class SwitchServer extends SubCommand {
 
     @Override
     public String getPermission() {
-        return "exaroton.start";
+        return "exaroton.switch";
     }
 }
