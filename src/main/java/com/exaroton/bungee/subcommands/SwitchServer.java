@@ -51,7 +51,7 @@ public class SwitchServer extends SubCommand {
 
     @Override
     public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
-        return plugin.serverCompletions(args[0], ServerStatus.OFFLINE);
+        return plugin.serverCompletions(args[0], null);
     }
 
     @Override

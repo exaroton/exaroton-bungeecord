@@ -303,7 +303,7 @@ public class ExarotonPlugin extends Plugin {
      * @param status server status
      * @return all matching server names, addresses and IDs
      */
-    public Iterable<String> serverCompletions(String query, int status) {
+    public Iterable<String> serverCompletions(String query, Integer status) {
         Stream<Server> servers;
         try {
             servers = Arrays.stream(getServerCache());
@@ -311,14 +311,16 @@ public class ExarotonPlugin extends Plugin {
             logger.log(Level.SEVERE, "Failed to access API", exception);
             return new ArrayList<>();
         }
-        servers = findWithStatus(servers, status);
+        if (status != null)
+            servers = findWithStatus(servers, status);
         servers = findWithQuery(servers, query);
         Server[] matching = servers.toArray(Server[]::new);
 
         Stream<String> bungeeServers = getBungeeServers()
                 .filter(s -> s.startsWith(query));
 
-        bungeeServers = findWithStatusByName(bungeeServers, status);
+        if (status != null)
+            bungeeServers = findWithStatusByName(bungeeServers, status);
 
         List<String> result = bungeeServers.collect(Collectors.toList());
         result.addAll(getAllNames(matching));
