@@ -126,7 +126,7 @@ public class ExarotonPlugin extends Plugin {
         for (String name : servers.getKeys()) {
             String address = servers.getString(name + ".address");
             if (address.matches(".*\\.exaroton\\.me(:\\d+)?")) {
-                this.bungeeServers.put(name, address.replaceAll(":\\d+", ""));
+                this.bungeeServers.put(name, address.replaceAll(":\\d+$", ""));
             }
         }
     }
@@ -448,11 +448,8 @@ public class ExarotonPlugin extends Plugin {
     public void watchServers() {
         if (!config.getBoolean("watch-servers", false)) return;
         Configuration servers = bungeeConfig.getSection("servers");
-        for (String name : servers.getKeys()) {
-            String address = servers.getString(name + ".address");
-            if (address.matches(".*\\.exaroton\\.me(:\\d+)?")) {
-                this.watchServer(name, address, servers.getBoolean(name + ".restricted", false));
-            }
+        for (Map.Entry<String, String> entry: bungeeServers.entrySet()) {
+            this.watchServer(entry.getKey(), entry.getValue(), servers.getBoolean(entry.getKey() + ".restricted", false));
         }
     }
 
