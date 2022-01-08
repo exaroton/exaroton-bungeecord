@@ -6,7 +6,7 @@ plugins {
 }
 
 group 'com.exaroton'
-version '1.5.1'
+version '1.5.2'
 
 repositories {
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
@@ -76,6 +76,12 @@ signing {
 }
 tasks.withType(Sign) {
     onlyIf { isReleaseVersion }
+}
+
+processResources {
+    filter {
+        it.replace('${project.version}', project.version)
+    }
 }
 
 shadowJar {
