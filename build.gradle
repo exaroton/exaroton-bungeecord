@@ -22,6 +22,11 @@ dependencies {
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
 publishing {
     repositories {
         maven {
@@ -36,8 +41,8 @@ publishing {
     }
 
     publications {
-        mavenJava(MavenPublication) { publication ->
-            project.shadow.component(publication)
+        mavenJava(MavenPublication) {
+            from components.java
             artifactId = 'bungee'
             pom {
                 name = 'exaroton Bungee API'
