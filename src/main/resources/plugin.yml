@@ -1,3 +1,5 @@
 name: ExarotonBungeePlugin
 main: com.exaroton.bungee.ExarotonPlugin
 version: ${project.version}
+description: Manage your exaroton servers in your network from Minecraft
+author: exaroton
