@@ -1,3 +1,7 @@
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
+
 plugins {
     id 'java-library'
     id 'com.github.johnrengelman.shadow' version '7.0.0'
@@ -6,7 +10,7 @@ plugins {
 }
 
 group 'com.exaroton'
-version '1.5.2'
+version '1.5.3-SNAPSHOT'
 
 repositories {
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
@@ -15,9 +19,7 @@ repositories {
 
 dependencies {
     shadow group: 'net.md-5', name: 'bungeecord-api', version: '1.16-R0.5-SNAPSHOT'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
-    implementation 'com.exaroton:api:1.4.0'
+    implementation 'com.exaroton:api:1.4.1'
 }
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
@@ -86,4 +88,31 @@ processResources {
 
 shadowJar {
     archiveClassifier.set('')
+}
+
+abstract class CopyPluginTask extends DefaultTask {
+    @Input
+    abstract Property<String> getArtifactName()
+
+    @TaskAction
+    def copyPlugin() {
+        File runDir = new File("./run");
+        if (!runDir.exists() || !runDir.isDirectory()) {
+            println "Directory 'run' does not exist."
+            return;
+        }
+
+        File pluginsDir = new File(runDir, "plugins");
+        if (!pluginsDir.exists()) {
+            pluginsDir.mkdir();
+        }
+
+        Files.copy(Paths.get("./build/libs/", getArtifactName().get()),
+                pluginsDir.toPath().resolve("exaroton-bungee-dev.jar"),
+                StandardCopyOption.REPLACE_EXISTING);
+    }
+}
+
+tasks.register('copyPlugin', CopyPluginTask) {
+    artifactName = "exaroton-bungee-${version}.jar"
 }

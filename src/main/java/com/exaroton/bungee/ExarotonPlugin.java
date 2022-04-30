@@ -68,6 +68,8 @@ public class ExarotonPlugin extends Plugin {
 
     @Override
     public void onEnable() {
+        this.getProxy().registerChannel("exaroton:proxy");
+        getProxy().getPluginManager().registerListener(this, new PluginMessenger(this));
         try {
             this.loadConfig();
             this.loadBungeeConfig();
@@ -85,6 +87,7 @@ public class ExarotonPlugin extends Plugin {
 
     @Override
     public void onDisable() {
+        this.getProxy().unregisterChannel("exaroton:proxy");
         if (this.exarotonClient != null) {
             this.autoStopServers();
         }

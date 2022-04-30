@@ -52,3 +52,17 @@ Adding it to your gradle project:
 ```
 implementation 'com.exaroton:bungee:1.4.0'
 ```
+
+## Messaging Channel
+Plugins running on your game servers can start, stop, restart, add, remove or switch exaroton servers 
+using the `exaroton:proxy` messaging channel.
+
+### Subchannels
+#### switch
+Transfer a user to this server, start/add the server if necessary
+arguments: <playername> <servername>
+
+### TODO
+watch: subscribe to status updates of a server
+unwatch: unsubscribe from status updates
+info: get current server information
