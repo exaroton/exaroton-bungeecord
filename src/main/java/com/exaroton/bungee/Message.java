@@ -4,8 +4,6 @@ import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.TextComponent;
 
 import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
 
 public class Message {
 

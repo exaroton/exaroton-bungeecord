@@ -6,9 +6,7 @@ import com.exaroton.api.server.ServerStatus;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public class ExarotonPluginAPI {
@@ -16,7 +14,7 @@ public class ExarotonPluginAPI {
     private static ExarotonPlugin plugin;
 
     /**
-     * find a server by it's
+     * find a server by its
      * - proxy name
      * - id
      * - address (e.g. example.exaroton.me)
@@ -40,7 +38,7 @@ public class ExarotonPluginAPI {
             throw new NullPointerException("No server provided!");
         }
 
-        if (!server.hasStatus(new int[]{ServerStatus.OFFLINE, ServerStatus.CRASHED})) {
+        if (!server.hasStatus(ServerStatus.OFFLINE, ServerStatus.CRASHED)) {
             return false;
         }
 
@@ -116,7 +114,7 @@ public class ExarotonPluginAPI {
     }
 
     /**
-     * watch this server
+     * watch this server,
      * add it the proxy when it becomes online
      * remove it when it goes offline
      * @param server server to watch
@@ -154,9 +152,9 @@ public class ExarotonPluginAPI {
             throw new NullPointerException("No server provided!");
         }
 
-        if (server.hasStatus(new int[]{ServerStatus.OFFLINE, ServerStatus.CRASHED, ServerStatus.LOADING, ServerStatus.STARTING, ServerStatus.PREPARING})) {
+        if (server.hasStatus(ServerStatus.OFFLINE, ServerStatus.CRASHED, ServerStatus.LOADING, ServerStatus.STARTING, ServerStatus.PREPARING)) {
             ServerStatusListener listener = watchServer(server);
-            if (server.hasStatus(new int[]{ServerStatus.OFFLINE, ServerStatus.CRASHED})) {
+            if (server.hasStatus(ServerStatus.OFFLINE, ServerStatus.CRASHED)) {
                 server.start();
             }
             try {

@@ -17,7 +17,7 @@ dependencies {
     shadow group: 'net.md-5', name: 'bungeecord-api', version: '1.16-R0.5-SNAPSHOT'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
-    implementation 'com.exaroton:api:1.4.0'
+    implementation 'com.exaroton:api:1.4.2'
 }
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")

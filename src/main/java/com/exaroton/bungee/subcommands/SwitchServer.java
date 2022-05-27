@@ -2,12 +2,10 @@ package com.exaroton.bungee.subcommands;
 
 import com.exaroton.api.APIException;
 import com.exaroton.api.server.Server;
-import com.exaroton.api.server.ServerStatus;
 import com.exaroton.bungee.*;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 
 public class SwitchServer extends SubCommand {

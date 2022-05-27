@@ -34,7 +34,7 @@ public class StartServer extends SubCommand {
                 return;
             }
 
-            if (!server.hasStatus(new int[]{ServerStatus.OFFLINE, ServerStatus.CRASHED})) {
+            if (!server.hasStatus(ServerStatus.OFFLINE, ServerStatus.CRASHED)) {
                 sender.sendMessage(Message.SERVER_NOT_OFFLINE);
                 return;
             }

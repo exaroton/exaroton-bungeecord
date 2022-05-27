@@ -62,7 +62,7 @@ public class ExarotonPlugin extends Plugin {
 
     /**
      * server status listeners
-     * serverid -> status listener
+     * server id -> status listener
      */
     private final HashMap<String, ServerStatusListener> statusListeners = new HashMap<>();
 
@@ -225,7 +225,10 @@ public class ExarotonPlugin extends Plugin {
      * @return does the server match exactly
      */
     public boolean matchExact(Server server, String query) {
-        return server.getAddress().equals(query) || server.getName().equals(query) || server.getId().equals(query);
+        query = query.toLowerCase(Locale.ROOT);
+        return server.getAddress().toLowerCase(Locale.ROOT).equals(query) ||
+                server.getName().toLowerCase(Locale.ROOT).equals(query) ||
+                server.getId().equals(query);
     }
 
     /**
@@ -490,14 +493,13 @@ public class ExarotonPlugin extends Plugin {
                     continue;
                 }
 
-                if (server.hasStatus(new int[]{ServerStatus.STARTING,
-                        ServerStatus.LOADING, ServerStatus.PREPARING, ServerStatus.RESTARTING})) {
+                if (server.hasStatus(ServerStatus.STARTING, ServerStatus.LOADING, ServerStatus.PREPARING, ServerStatus.RESTARTING)) {
                     logger.log(Level.INFO, name + " is already online or starting!");
                     this.listenToStatus(server, null, name, ServerStatus.ONLINE);
                     continue;
                 }
 
-                if (!server.hasStatus(new int[]{ServerStatus.OFFLINE, ServerStatus.CRASHED})) {
+                if (!server.hasStatus(ServerStatus.OFFLINE, ServerStatus.CRASHED)) {
                     logger.log(Level.SEVERE, "Can't start " + name + ": Server isn't offline.");
                     continue;
                 }
@@ -564,12 +566,12 @@ public class ExarotonPlugin extends Plugin {
                 }
 
                 String name = findServerName(server.getAddress(), server.getName());
-                if (server.hasStatus(new int[]{ServerStatus.OFFLINE, ServerStatus.CRASHED})) {
+                if (server.hasStatus(ServerStatus.OFFLINE, ServerStatus.CRASHED)) {
                     logger.log(Level.INFO, name + " is already offline!");
                     continue;
                 }
 
-                if (server.hasStatus(new int[]{ServerStatus.SAVING, ServerStatus.STOPPING})) {
+                if (server.hasStatus(ServerStatus.SAVING, ServerStatus.STOPPING)) {
                     logger.log(Level.INFO, name + " is already stopping!");
                     continue;
                 }

@@ -9,7 +9,6 @@ import com.exaroton.bungee.ServerStatusListener;
 import com.exaroton.bungee.SubCommand;
 import net.md_5.bungee.api.CommandSender;
 
-import java.util.List;
 import java.util.logging.Level;
 
 public class AddServer extends SubCommand {
