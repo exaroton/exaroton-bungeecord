@@ -1,0 +1,43 @@
+name: Release
+on:
+  push:
+    tags:
+      - '*.*.*'
+jobs:
+  build:
+    if: github.repository_owner == 'exaroton'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: gradle/actions/wrapper-validation@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Build with Gradle
+        run: ./gradlew shadowJar -Prelease=${{  github.ref_name }} --stacktrace
+      - name: Publish to Maven Central
+        env:
+          ORG_GRADLE_PROJECT_SIGNING_KEY: ${{ secrets.EXAROTON_GPG_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_SIGNING_PASSPHRASE: ${{ secrets.EXAROTON_GPG_SIGNING_PASSPHRASE }}
+          ORG_GRADLE_PROJECT_OSSRH_USERNAME: ${{ secrets.SONATYPE_OSSRH_USERNAME }}
+          ORG_GRADLE_PROJECT_OSSRH_PASSWORD: ${{ secrets.SONATYPE_OSSRH_PASSWORD }}
+        run: ./gradlew publish -Prelease=${{ github.ref_name }} --stacktrace
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./build/libs/exaroton-bungeecord-*.jar
+          body_path: ${{ github.workspace }}/CHANGELOG.md
+          name: v${{ github.ref_name }}
+      - name: Publish to Modrinth
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: ./gradlew modrinth -Prelease=${{  github.ref_name }} --stacktrace
+      - name: Publish to Hangar
+        env:
+          HANGAR_TOKEN: ${{ secrets.HANGAR_TOKEN }}
+        run: ./gradlew publishPluginPublicationToHangar -Prelease=${{  github.ref_name }} --stacktrace

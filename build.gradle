@@ -1,12 +1,18 @@
 plugins {
     id 'java-library'
-    id 'com.github.johnrengelman.shadow' version '7.0.0'
     id 'maven-publish'
     id 'signing'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
+    id 'xyz.jpenilla.run-waterfall' version '2.3.1'
+    id 'com.modrinth.minotaur' version '2.8.7'
+    id 'io.papermc.hangar-publish-plugin' version '0.1.2'
 }
 
 group 'com.exaroton'
-version '1.5.2'
+
+version = project.hasProperty('release') ? project.getProperty('release') : 'dev'
+java.sourceCompatibility = JavaVersion.VERSION_11
+java.targetCompatibility = JavaVersion.VERSION_11
 
 repositories {
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
@@ -14,17 +20,33 @@ repositories {
 }
 
 dependencies {
-    shadow group: 'net.md-5', name: 'bungeecord-api', version: '1.16-R0.5-SNAPSHOT'
+    shadow "net.md-5:bungeecord-api:${minecraftVersion}-R0.1-SNAPSHOT"
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
-    implementation 'com.exaroton:api:1.4.2'
+    implementation 'com.exaroton:api:1.6.2'
 }
 
-ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+ext.isReleaseVersion = project.version != "dev"
 
 java {
     withJavadocJar()
     withSourcesJar()
+}
+
+processResources {
+    filter {
+        it.replace('${project.version}', project.version)
+    }
+}
+
+shadowJar {
+    archiveClassifier.set('')
+}
+
+tasks {
+    runWaterfall {
+        waterfallVersion(minecraftVersion)
+    }
 }
 
 publishing {
@@ -34,8 +56,8 @@ publishing {
             def snapshotRepo = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
             url = isReleaseVersion ? releaseRepo : snapshotRepo
             credentials {
-                username = project.hasProperty('ossrhUsername') ? ossrhUsername : "Unknown user"
-                password = project.hasProperty('ossrhPassword') ? ossrhPassword : "Unknown password"
+                username = findProperty('OSSRH_USERNAME')
+                password = findProperty('OSSRH_PASSWORD')
             }
         }
     }
@@ -72,18 +94,55 @@ publishing {
 }
 
 signing {
+    def signingKey = findProperty("SIGNING_KEY").toString()
+    def signingPassword = findProperty("SIGNING_PASSPHRASE").toString()
+    useInMemoryPgpKeys(signingKey, signingPassword)
     sign publishing.publications.mavenJava
 }
+
 tasks.withType(Sign) {
     onlyIf { isReleaseVersion }
 }
 
-processResources {
-    filter {
-        it.replace('${project.version}', project.version)
-    }
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = "h9yHzOys"
+    uploadFile = shadowJar
+    gameVersions = [
+            "1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4",
+            "1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4", "1.20.5", "1.20.6",
+            "1.19", "1.19.1", "1.19.2", "1.19.3", "1.19.4",
+            "1.18", "1.18.1", "1.18.2",
+            "1.17", "1.17.1",
+            "1.16", "1.16.1", "1.16.2", "1.16.3", "1.16.4", "1.16.5",
+            "1.15", "1.15.1", "1.15.2",
+            "1.14", "1.14.1", "1.14.2", "1.14.3", "1.14.4",
+            "1.13", "1.13.1", "1.13.2",
+            "1.12", "1.12.1", "1.12.2",
+            "1.11", "1.11.1", "1.11.2",
+            "1.10", "1.10.1", "1.10.2",
+            "1.9", "1.9.1", "1.9.2", "1.9.3", "1.9.4",
+            "1.8", "1.8.1", "1.8.2", "1.8.3", "1.8.4", "1.8.5", "1.8.6", "1.8.7", "1.8.8", "1.8.9",
+            "1.7", "1.7.1", "1.7.2", "1.7.3", "1.7.4", "1.7.5", "1.7.6", "1.7.7", "1.7.8", "1.7.9", "1.7.10"
+    ]
+    loaders = ["bungeecord", "waterfall"]
+    changelog = rootProject.file("CHANGELOG.md").text
 }
 
-shadowJar {
-    archiveClassifier.set('')
+hangarPublish {
+    publications.register("plugin") {
+        version.set(project.version as String)
+        channel.set("Release")
+        id.set("exaroton-proxy-plugin")
+        apiKey.set(System.getenv("HANGAR_TOKEN"))
+        platforms {
+            register(io.papermc.hangarpublishplugin.model.Platforms.WATERFALL) {
+                // Set the JAR file to upload
+                jar.set(tasks.shadowJar.outputs.files.singleFile)
+
+                platformVersions.set(project.hangarWaterfallVersions.split(",").collect { it.trim() })
+                changelog.set(rootProject.file("CHANGELOG.md").text)
+            }
+        }
+    }
 }

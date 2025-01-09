@@ -1,6 +1,6 @@
 # exaroton BungeeCord Plugin
 A BungeeCord plugin designed to use exaroton servers in your proxy network.
-This plugin can be used on proxies that don't run on exaroton as well.
+This plugin can also be used on proxies that don't run on exaroton.
 
 ## Setup
 1. Install the plugin and start the server
@@ -50,5 +50,5 @@ You can call any actions in this plugin from your own BungeeCord plugin using th
 
 Adding it to your gradle project:
 ```
-implementation 'com.exaroton:bungee:1.4.0'
+implementation 'com.exaroton:bungee:1.5.3'
 ```
