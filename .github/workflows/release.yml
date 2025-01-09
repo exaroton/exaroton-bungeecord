@@ -30,7 +30,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ./build/libs/exaroton-bungeecord-*.jar
+            ./build/libs/exaroton-bungee-*.jar
           body_path: ${{ github.workspace }}/CHANGELOG.md
           name: v${{ github.ref_name }}
       - name: Publish to Modrinth
